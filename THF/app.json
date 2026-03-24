@@ -5,33 +5,78 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/THF/image.png",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "scheme": "thf",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.tfh.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow THF to access your camera to take photos for KYC and profile.",
+        "NSPhotoLibraryUsageDescription": "Allow THF to access your photos for uploading documents."
+      }
     },
     "android": {
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/THF/image.png"
-
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.tfh.app"
+      "package": "com.tfh.app",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#ffffff",
+          "image": "./assets/THF/image.png",
+          "imageWidth": 200
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow THF to access your camera to take photos for KYC and profile.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow THF to access your photos for uploading documents.",
+          "cameraPermission": "Allow THF to access your camera to take photos for KYC and profile."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "sounds": [],
+          "color": "#E8304A"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "4a587d21-58fd-402f-9dcf-fc4018c345f2"
+      }
+    },
+    "owner": "mohit551"
   }
 }

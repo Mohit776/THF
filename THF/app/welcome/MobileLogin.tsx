@@ -18,7 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { loginWithPhonePassword, sendOtp } from '@/lib/auth';
 import { saveSession } from '@/src/services/sessionStorage';
-import { getUserProfile } from '@/src/services/userService';
+import { getUserProfile, getUserProfileByPhone } from '@/src/services/userService';
 
 const { height } = Dimensions.get('window');
 
@@ -66,6 +66,26 @@ export default function MobileLoginScreen({ onGetStarted }: MobileLoginScreenPro
     try {
       const phoneNumber = `+91${mobile.trim()}`;
       if (mode === 'signup') {
+        const existingProfile = await getUserProfileByPhone(phoneNumber);
+        if (existingProfile) {
+          Alert.alert(
+            'Already Registered',
+            'This mobile number is already registered. Please login instead.',
+            [
+              {
+                text: 'OK',
+                onPress: () =>
+                  router.replace({
+                    pathname: '/welcome/MobileLogin',
+                    params: { mode: 'login' },
+                  }),
+              },
+            ]
+          );
+          setLoading(false);
+          return;
+        }
+
         const verificationId = await sendOtp(phoneNumber);
 
         // Signup flow uses OTP verification.

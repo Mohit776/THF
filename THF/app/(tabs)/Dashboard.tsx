@@ -1,10 +1,11 @@
 import { useUserStore } from '@/src/hooks/useUserStore';
 import { getPartnerBookings, type Booking as FirestoreBooking, listenToBroadcastedBookings, acceptBroadcastedBooking } from '@/src/services/bookingService';
+import { registerForPushNotifications, sendLocalNotification } from '@/src/services/notificationService';
 import { auth } from '@/src/services/firebaseConfig';
 import dayjs from 'dayjs';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ActivityIndicator,
   Dimensions,
@@ -224,10 +225,32 @@ export default function DashboardScreen() {
   const [broadcastedBookings, setBroadcastedBookings] = useState<(FirestoreBooking & { bookingId?: string })[]>([]);
   const [acceptingBookingId, setAcceptingBookingId] = useState<string | null>(null);
 
+  const prevBroadcastCount = useRef(0);
+
+  // Register push token on mount
+  useEffect(() => {
+    const uid = auth.currentUser?.uid;
+    if (uid) {
+      registerForPushNotifications(uid);
+    }
+  }, [profile]);
+
   useEffect(() => {
     if (!auth.currentUser?.uid) return;
 
     const unsubscribe = listenToBroadcastedBookings((bBookings) => {
+      // Send local notification if new bookings appeared
+      if (bBookings.length > prevBroadcastCount.current && prevBroadcastCount.current >= 0) {
+        const newest = bBookings[0];
+        if (newest && prevBroadcastCount.current > 0) {
+          sendLocalNotification(
+            '🍳 New Booking Available!',
+            `${newest.clientName} - ${newest.eventType} - ${newest.guests} guests`,
+            { type: 'broadcast_booking' },
+          );
+        }
+      }
+      prevBroadcastCount.current = bBookings.length;
       setBroadcastedBookings(bBookings);
     });
     return () => unsubscribe();

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { collection, addDoc, serverTimestamp, Timestamp } from "firebase/firestore";
+import { collection, addDoc, getDocs, serverTimestamp, Timestamp } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Plus, X, Loader2 } from "lucide-react";
 
@@ -55,6 +55,36 @@ export default function CreateBookingModal() {
       };
 
       await addDoc(collection(db, "bookings"), bookingData);
+
+      // Send push notifications to all partners
+      try {
+        const usersSnap = await getDocs(collection(db, "users"));
+        const tokens: string[] = [];
+        usersSnap.forEach((doc) => {
+          const data = doc.data();
+          if (data.expoPushToken) {
+            tokens.push(data.expoPushToken);
+          }
+        });
+
+        if (tokens.length > 0) {
+          await fetch("/api/send-notification", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              tokens,
+              title: "🍳 New Booking Available!",
+              body: `${formData.clientName} - ${formData.eventType} - ${formData.guests} guests at ${formData.location}`,
+              data: { type: "broadcast_booking" },
+            }),
+          });
+          console.log("[CreateBookingModal] Push sent to", tokens.length, "partners");
+        }
+      } catch (pushErr) {
+        console.warn("[CreateBookingModal] Failed to send push:", pushErr);
+        // Don't fail the booking creation if push fails
+      }
+
       setSuccess(true);
       setTimeout(() => {
         setIsOpen(false);
