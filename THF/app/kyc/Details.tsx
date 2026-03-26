@@ -202,7 +202,7 @@ export default function DetailsScreen({ onBack, onRegister }: DetailsScreenProps
 
   const allFilled =
     name.trim().length > 1 &&
-    isValidEmail(email) &&
+    (email.trim() === '' || isValidEmail(email)) &&
     isValidPhone(emergency) &&
     gender &&
     city &&
@@ -294,7 +294,7 @@ export default function DetailsScreen({ onBack, onRegister }: DetailsScreenProps
           </Text>
 
           <FloatingInput label="Enter Name" value={name} onChangeText={setName} isValid={name.trim().length > 1} editable={!saving} />
-          <FloatingInput label="Enter Email" value={email} onChangeText={setEmail} keyboardType="email-address" isValid={isValidEmail(email)} editable={!saving} />
+          <FloatingInput label="Enter Email (Optional)" value={email} onChangeText={setEmail} keyboardType="email-address" isValid={email.length > 0 ? isValidEmail(email) : true} editable={!saving} />
           <FloatingInput label="Emergency contact number" value={emergency} onChangeText={setEmergency} keyboardType="phone-pad" isValid={isValidPhone(emergency)} editable={!saving} />
 
           <DropdownField label="Select Gender" value={gender} options={GENDERS} onSelect={setGender} />

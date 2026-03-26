@@ -62,8 +62,8 @@ export default function CreateBookingModal() {
         const tokens: string[] = [];
         usersSnap.forEach((doc) => {
           const data = doc.data();
-          if (data.expoPushToken) {
-            tokens.push(data.expoPushToken);
+          if (data.fcmToken) {
+            tokens.push(data.fcmToken);
           }
         });
 

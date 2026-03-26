@@ -50,23 +50,18 @@ export async function registerForPushNotifications(
       return null;
     }
 
-    // Get the Expo push token
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId ??
-      Constants.easConfig?.projectId;
-
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId,
-    });
+    // Get the native FCM (or APNs on iOS) device push token
+    const tokenData = await Notifications.getDevicePushTokenAsync();
     const token = tokenData.data;
-    console.log('[notifications] Expo push token:', token);
+    console.log('[notifications] Device push token (FCM/APNs):', token);
 
-    // Store token in Firestore
+    // Store token in Firestore as fcmToken
     await setDoc(
       doc(db, 'users', uid),
-      { expoPushToken: token },
+      { fcmToken: token },
       { merge: true },
     );
-    console.log('[notifications] Token saved to Firestore for uid:', uid);
+    console.log('[notifications] Device token saved to Firestore for uid:', uid);
 
     // Android: set notification channel
     if (Platform.OS === 'android') {

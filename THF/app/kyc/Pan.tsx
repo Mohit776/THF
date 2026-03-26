@@ -152,7 +152,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
           </TouchableOpacity>
 
           {/* Heading */}
-          <Text style={styles.heading}>Enter your Pan details</Text>
+          <Text style={styles.heading}>Enter your Pan details (Optional)</Text>
           <Text style={styles.subheading}>Upload your own documents for a faster process!</Text>
 
           <View style={styles.cardContainer}>
@@ -227,7 +227,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.skipText}>Skip, I'll do it letter</Text>
+            <Text style={styles.skipText}>Skip, I'll do it later</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

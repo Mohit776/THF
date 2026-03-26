@@ -25,6 +25,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import Navbar from '../../components/Navbar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width } = Dimensions.get('window');
 
 /* ── Types ── */
@@ -152,10 +153,12 @@ function BroadcastedBookingCard({
   booking,
   onAccept,
   isAccepting,
+  onIgnore,
 }: {
   booking: FirestoreBooking & { bookingId?: string };
   onAccept: () => void;
   isAccepting: boolean;
+  onIgnore: () => void;
 }) {
   const bTime = dayjs((booking.date as any).toDate?.() ?? booking.date);
   const slideAnim = React.useRef(new Animated.Value(100)).current; // slide up from 100px
@@ -197,6 +200,14 @@ function BroadcastedBookingCard({
       <View style={bookingStyles.divider} />
       <View style={bookingStyles.actions}>
         <TouchableOpacity 
+          style={[bookingStyles.locationBtn, { backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#DDD' }]} 
+          onPress={onIgnore}
+          activeOpacity={0.8}
+        >
+          <Text style={[bookingStyles.locationBtnText, { color: '#666' }]}>Ignore</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
           style={[bookingStyles.locationBtn, { backgroundColor: '#31B76B' }]} 
           onPress={onAccept} 
           disabled={isAccepting}
@@ -224,6 +235,7 @@ export default function DashboardScreen() {
 
   const [broadcastedBookings, setBroadcastedBookings] = useState<(FirestoreBooking & { bookingId?: string })[]>([]);
   const [acceptingBookingId, setAcceptingBookingId] = useState<string | null>(null);
+  const [ignoredBookingIds, setIgnoredBookingIds] = useState<string[]>([]);
 
   const prevBroadcastCount = useRef(0);
 
@@ -233,6 +245,12 @@ export default function DashboardScreen() {
     if (uid) {
       registerForPushNotifications(uid);
     }
+
+    const loadIgnored = async () => {
+      const stored = await AsyncStorage.getItem('ignored_bookings');
+      if (stored) setIgnoredBookingIds(JSON.parse(stored));
+    };
+    loadIgnored();
   }, [profile]);
 
   useEffect(() => {
@@ -273,6 +291,16 @@ export default function DashboardScreen() {
       Alert.alert('Error', error.message || 'Failed to accept booking. It might have been claimed by someone else.');
     } finally {
       setAcceptingBookingId(null);
+    }
+  };
+
+  const handleIgnoreBroadcastedBooking = async (bookingId: string) => {
+    const newIgnored = [...ignoredBookingIds, bookingId];
+    setIgnoredBookingIds(newIgnored);
+    try {
+      await AsyncStorage.setItem('ignored_bookings', JSON.stringify(newIgnored));
+    } catch (e) {
+      console.error('Failed to save ignored booking', e);
     }
   };
 
@@ -364,14 +392,17 @@ export default function DashboardScreen() {
         </View>
 
         {/* ── Broadcasted Bookings ── */}
-        {isVerified && broadcastedBookings.length > 0 && (
+        {isVerified && broadcastedBookings.filter(b => b.bookingId && !ignoredBookingIds.includes(b.bookingId)).length > 0 && (
           <View style={{ marginBottom: 16 }}>
-             {broadcastedBookings.map((b) => (
+             {broadcastedBookings
+              .filter(b => b.bookingId && !ignoredBookingIds.includes(b.bookingId))
+              .map((b) => (
                 <BroadcastedBookingCard 
                   key={b.bookingId} 
                   booking={b} 
                   onAccept={() => b.bookingId && handleAcceptBroadcastedBooking(b.bookingId)}
                   isAccepting={acceptingBookingId === b.bookingId}
+                  onIgnore={() => b.bookingId && handleIgnoreBroadcastedBooking(b.bookingId)}
                 />
              ))}
           </View>
@@ -401,6 +432,13 @@ export default function DashboardScreen() {
             >
               <Text style={styles.uploadBtnText}>Upload Document</Text>
             </TouchableOpacity>
+          </View>
+        ) : (profile?.kycStatus === 'pending' || profile?.kycStatus === 'pending_verification') ? (
+          <View style={styles.verificationCard}>
+            <Text style={styles.verificationTitle}>Your verification is in review</Text>
+            <Text style={styles.verificationSubtitle}>
+              Please wait while our team verifies your documents. This usually takes 24-48 hours.
+            </Text>
           </View>
         ) : !isVerified ? (
           <View style={styles.emptyCard}>

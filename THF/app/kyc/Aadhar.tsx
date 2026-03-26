@@ -327,7 +327,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.skipText}>Skip, I'll do it letter</Text>
+                <Text style={styles.skipText}>Skip, I'll do it later</Text>
               </TouchableOpacity>
             </>
           ) : stage === 'front-uploaded' ? (
@@ -354,7 +354,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.skipText}>Skip, I'll do it letter</Text>
+                <Text style={styles.skipText}>Skip, I'll do it later</Text>
               </TouchableOpacity>
             </>
           ) : null}

@@ -2,6 +2,8 @@
 
 import { adminDb } from "@/lib/firebase-admin";
 
+import { sendPushNotification } from "@/lib/notifications";
+
 export async function createBookingForChef(
   partnerId: string,
   data: {
@@ -28,6 +30,20 @@ export async function createBookingForChef(
       createdAt: new Date(),
     });
 
+    // Notify the specific partner about the new direct booking assignment
+    const partnerDoc = await adminDb.collection("users").doc(partnerId).get();
+    if (partnerDoc.exists) {
+      const partnerData = partnerDoc.data();
+      if (partnerData?.fcmToken) {
+        await sendPushNotification(
+          [partnerData.fcmToken],
+          "📌 New Booking Assigned!",
+          `You've been assigned a ${data.eventType} for ${data.guests} guests at ${data.location}.`,
+          { type: "direct_booking_assigned", bookingId: bookingRef.id }
+        );
+      }
+    }
+
     return { success: true, bookingId: bookingRef.id };
   } catch (error: any) {
     console.error("Error creating booking:", error);
@@ -37,3 +53,4 @@ export async function createBookingForChef(
     };
   }
 }
+

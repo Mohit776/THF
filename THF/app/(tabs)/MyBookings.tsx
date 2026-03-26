@@ -10,6 +10,8 @@ import {
   RefreshControl,
   Linking,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Navbar from '../../components/Navbar';
@@ -118,6 +120,43 @@ export default function MyBookingsScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
   const [refreshing, setRefreshing] = useState(false);
 
+  // OTP and Timer State
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpText, setOtpText] = useState('');
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+
+  // Timer Effect
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (isTimerRunning && !isPaused) {
+      interval = setInterval(() => {
+        setTimerSeconds(prev => prev + 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isTimerRunning, isPaused]);
+
+  const verifyOtp = () => {
+    if (otpText.length >= 4) {
+      setShowOtpModal(false);
+      setIsTimerRunning(true);
+      setIsPaused(false);
+      setTimerSeconds(0);
+      setOtpText('');
+    } else {
+      Alert.alert('Invalid OTP', 'Please enter a valid OTP provided by the client.');
+    }
+  };
+
+  const formatTime = (totalSeconds: number) => {
+    const h = Math.floor(totalSeconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((totalSeconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
+
   const dateLabel = dayjs().format('DD MMM YYYY | hh:mm a');
 
   const fetchBookings = React.useCallback(async () => {
@@ -201,32 +240,93 @@ export default function MyBookingsScreen() {
             <Text style={styles.nextUpMeta}>Time: {nextUp.time}</Text>
             <Text style={styles.nextUpMeta}>Location: {nextUp.locationNote}</Text>
             <Text style={styles.nextUpMeta}>{nextUp.guests} guests | {nextUp.cuisine}</Text>
-            <View style={styles.nextUpActions}>
-              <TouchableOpacity 
-                style={styles.navBtn} 
-                activeOpacity={0.8}
-                onPress={() => {
-                  if (nextUp.locationNote && nextUp.locationNote !== 'not assigned') {
-                    Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(nextUp.locationNote)}`);
-                  }
-                }}
-              >
-                <Text style={styles.navBtnText}>Navigate location</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.callBtn} 
-                activeOpacity={0.8}
-                onPress={() => {
-                  if (nextUp.phone) {
-                    Linking.openURL(`tel:${nextUp.phone}`);
-                  } else {
-                    Alert.alert('Unavailable', 'Phone number not provided');
-                  }
-                }}
-              >
-                <Text style={styles.callBtnText}>Call Client</Text>
-              </TouchableOpacity>
-            </View>
+
+            {/* Timer or Actions */}
+            {isTimerRunning || isPaused ? (
+               <View style={styles.timerContainer}>
+                 <View style={styles.timerRow}>
+                   <View style={styles.timerCol}>
+                     <Text style={styles.timerVal}>{formatTime(timerSeconds).split(':')[0]}</Text>
+                     <Text style={styles.timerUnit}>HOURS</Text>
+                   </View>
+                   <Text style={styles.timerColon}>:</Text>
+                   <View style={styles.timerCol}>
+                     <Text style={styles.timerVal}>{formatTime(timerSeconds).split(':')[1]}</Text>
+                     <Text style={styles.timerUnit}>MINUTES</Text>
+                   </View>
+                   <Text style={styles.timerColon}>:</Text>
+                   <View style={styles.timerCol}>
+                     <Text style={styles.timerVal}>{formatTime(timerSeconds).split(':')[2]}</Text>
+                     <Text style={styles.timerUnit}>SECONDS</Text>
+                   </View>
+                 </View>
+                 <View style={styles.timerActions}>
+                   <TouchableOpacity 
+                     style={styles.cancelBtn} 
+                     activeOpacity={0.8}
+                     onPress={() => {
+                        setIsTimerRunning(false);
+                        setIsPaused(false);
+                        setTimerSeconds(0);
+                        setShowOtpModal(false);
+                     }}
+                   >
+                     <Text style={styles.cancelBtnText}>Cancel</Text>
+                   </TouchableOpacity>
+                   <TouchableOpacity 
+                     style={styles.pauseBtn} 
+                     activeOpacity={0.8}
+                     onPress={() => {
+                        setIsPaused(!isPaused);
+                        if (isPaused) {
+                           setIsTimerRunning(true);
+                        } else {
+                           setIsTimerRunning(false);
+                        }
+                     }}
+                   >
+                     <Text style={styles.pauseBtnText}>{isPaused ? 'Resume' : 'Pause'}</Text>
+                   </TouchableOpacity>
+                 </View>
+               </View>
+            ) : (
+              <View style={styles.nextUpActions}>
+                <TouchableOpacity 
+                  style={[styles.navBtn, { flex: 1, backgroundColor: '#EA243F' }]} 
+                  activeOpacity={0.8}
+                  onPress={() => setShowOtpModal(true)}
+                >
+                  <Text style={[styles.navBtnText, { color: '#fff' }]}>Reached to Location</Text>
+                </TouchableOpacity>
+
+                <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-between' }}>
+                <TouchableOpacity 
+                  style={[styles.navBtn, { flex: 1 }]} 
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (nextUp.locationNote && nextUp.locationNote !== 'not assigned') {
+                      Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(nextUp.locationNote)}`);
+                    }
+                  }}
+                >
+                  <Text style={styles.navBtnText}>Navigate location</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.callBtn, { flex: 1 }]} 
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (nextUp.phone) {
+                      Linking.openURL(`tel:${nextUp.phone}`);
+                    } else {
+                      Alert.alert('Unavailable', 'Phone number not provided');
+                    }
+                  }}
+                >
+                  <Text style={styles.callBtnText}>Call Client</Text>
+                </TouchableOpacity>
+                </View>
+              </View>
+            )}
           </View>
         )}
 
@@ -261,6 +361,32 @@ export default function MyBookingsScreen() {
 
         <View style={{ height: 16 }} />
       </ScrollView>
+
+      {/* ── OTP Modal ── */}
+      <Modal visible={showOtpModal} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Share the confirmation OTP to the client</Text>
+            <TextInput 
+              style={styles.otpInput} 
+              placeholder="Enter OTP" 
+              placeholderTextColor="#aaa"
+              keyboardType="number-pad"
+              value={otpText}
+              onChangeText={setOtpText}
+              maxLength={6}
+            />
+            <TouchableOpacity style={styles.verifyBtn} onPress={verifyOtp} activeOpacity={0.8}>
+              <Text style={styles.verifyBtnText}>Verify OTP</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={{ marginTop: 16 }} onPress={() => setShowOtpModal(false)}>
+              <Text style={{ color: '#888', fontWeight: '500' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </SafeAreaView>
   );
 }
@@ -291,7 +417,7 @@ const styles = StyleSheet.create({
   nextUpLabel: { fontSize: 12, color: '#888', marginBottom: 6 },
   nextUpTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginBottom: 10, lineHeight: 26 },
   nextUpMeta: { fontSize: 13, color: '#555', marginBottom: 4 },
-  nextUpActions: { flexDirection: 'row', gap: 10, marginTop: 16 },
+  nextUpActions: { flexDirection: 'column', gap: 10, marginTop: 16 },
   navBtn: {
     borderRadius: 8, paddingHorizontal: 16,
     paddingVertical: 10, alignItems: 'center', backgroundColor: '#4591E8'
@@ -341,6 +467,27 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   emptyText: { fontSize: 14, color: '#999', fontWeight: '500' },
+
+  /* Timer UI */
+  timerContainer: { backgroundColor: '#fff', alignItems: 'center', marginTop: 12 },
+  timerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
+  timerCol: { alignItems: 'center', marginHorizontal: 8 },
+  timerVal: { fontSize: 52, fontWeight: '800', color: '#31343E' },
+  timerUnit: { fontSize: 11, color: '#9FA4B4', fontWeight: '500', marginTop: 4 },
+  timerColon: { fontSize: 32, fontWeight: '700', color: '#9FA4B4', paddingBottom: 22, marginHorizontal: 4 },
+  timerActions: { flexDirection: 'row', gap: 16, width: '100%', justifyContent: 'center' },
+  cancelBtn: { backgroundColor: '#EAEDF1', paddingVertical: 12, paddingHorizontal: 36, borderRadius: 8 },
+  cancelBtnText: { color: '#31343E', fontWeight: '500', fontSize: 15 },
+  pauseBtn: { backgroundColor: '#EE2A45', paddingVertical: 12, paddingHorizontal: 36, borderRadius: 8 },
+  pauseBtnText: { color: '#fff', fontWeight: '500', fontSize: 15 },
+
+  /* OTP Modal UI */
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
+  modalContent: { backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '90%', alignItems: 'center' },
+  modalTitle: { fontSize: 16, fontWeight: '600', color: '#111', marginBottom: 20 },
+  otpInput: { width: '100%', borderWidth: 1, borderColor: '#D9D9D9', borderRadius: 8, padding: 14, fontSize: 15, marginBottom: 20, color: '#333' },
+  verifyBtn: { backgroundColor: '#E8304A', width: '100%', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
+  verifyBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
 });
 
 const cardStyles = StyleSheet.create({

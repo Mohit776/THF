@@ -20,6 +20,7 @@ interface DocumentItem {
   id: string;
   label: string;
   uploaded: boolean;
+  optional?: boolean;
 }
 
 interface UploadDocumentsScreenProps {
@@ -33,7 +34,7 @@ interface UploadDocumentsScreenProps {
 const DEFAULT_DOCS: DocumentItem[] = [
   { id: 'selfie', label: 'Upload profile picture (Selfie)', uploaded: false },
   { id: 'aadhar', label: 'Upload Aadhar card front & back', uploaded: false },
-  { id: 'pan', label: 'Upload PAN number', uploaded: false },
+  { id: 'pan', label: 'Upload PAN number (Optional)', uploaded: false, optional: true },
 ];
 
 export default function UploadDocumentsScreen({
@@ -82,7 +83,7 @@ export default function UploadDocumentsScreen({
     }, [])
   );
 
-  const allUploaded = docs.every((d) => d.uploaded);
+  const allUploaded = docs.every((d) => d.optional || d.uploaded);
 
   const handleDocPress = (doc: DocumentItem) => {
     onDocumentPress?.(doc);
@@ -208,8 +209,18 @@ export default function UploadDocumentsScreen({
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.skipBtn} onPress={onSkip} activeOpacity={0.7}>
-            <Text style={styles.skipText}>Skip, I'll do it letter</Text>
+          <TouchableOpacity 
+            style={styles.skipBtn} 
+            onPress={() => {
+              if (onSkip) {
+                onSkip();
+              } else {
+                router.push('/(tabs)/Dashboard');
+              }
+            }} 
+            activeOpacity={0.7}
+          >
+            <Text style={styles.skipText}>Skip, I'll do it later</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

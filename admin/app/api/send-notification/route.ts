@@ -1,17 +1,10 @@
 /**
- * Admin API route to send Expo push notifications.
+ * Admin API route to send FCM push notifications.
  * POST /api/send-notification
  * Body: { tokens: string[], title: string, body: string, data?: object }
  */
 import { NextRequest, NextResponse } from "next/server";
-
-interface ExpoPushMessage {
-  to: string;
-  title: string;
-  body: string;
-  sound?: string;
-  data?: Record<string, unknown>;
-}
+import admin from "@/lib/firebase-admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -21,44 +14,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No push tokens provided" }, { status: 400 });
     }
 
-    // Build messages for Expo Push API
-    const messages: ExpoPushMessage[] = tokens
-      .filter((t: string) => t && t.startsWith("ExponentPushToken"))
-      .map((token: string) => ({
-        to: token,
+    // Filter out invalid/empty tokens
+    const validTokens = tokens.filter((t: string) => typeof t === "string" && t.trim().length > 0);
+
+    if (validTokens.length === 0) {
+      return NextResponse.json({ error: "No valid FCM push tokens" }, { status: 400 });
+    }
+
+    // FCM requires the data payload to strictly be Record<string, string>
+    const stringifiedData: Record<string, string> = {};
+    if (data) {
+      for (const [key, value] of Object.entries(data)) {
+        stringifiedData[key] = String(value);
+      }
+    }
+
+    const message = {
+      notification: {
         title,
         body,
-        sound: "default",
-        data: data || {},
-      }));
+      },
+      data: stringifiedData,
+      tokens: validTokens,
+    };
 
-    if (messages.length === 0) {
-      return NextResponse.json({ error: "No valid Expo push tokens" }, { status: 400 });
-    }
+    const response = await admin.messaging().sendEachForMulticast(message);
+    
+    // Log the outcome for debugging
+    const failedTokens: string[] = [];
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success) {
+        failedTokens.push(validTokens[idx]);
+        console.warn("[send-notification] Failed to send push to token:", validTokens[idx], "Error:", resp.error);
+      }
+    });
 
-    // Send to Expo Push API in chunks of 100
-    const CHUNK_SIZE = 100;
-    const results = [];
-
-    for (let i = 0; i < messages.length; i += CHUNK_SIZE) {
-      const chunk = messages.slice(i, i + CHUNK_SIZE);
-      const response = await fetch("https://exp.host/--/api/v2/push/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify(chunk),
-      });
-
-      const result = await response.json();
-      results.push(result);
-    }
-
-    console.log("[send-notification] Push sent to", messages.length, "devices");
-    return NextResponse.json({ success: true, sent: messages.length, results });
+    console.log(`[send-notification] Successfully sent: ${response.successCount}, Failed: ${response.failureCount}`);
+    
+    return NextResponse.json({ 
+      success: true, 
+      sent: response.successCount, 
+      failed: response.failureCount,
+      failedTokens
+    });
   } catch (error: any) {
     console.error("[send-notification] Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
