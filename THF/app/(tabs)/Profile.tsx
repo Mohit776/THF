@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Navbar from '../../components/Navbar';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 /* ── Types ── */
 interface ProfileScreenProps {
@@ -74,6 +75,7 @@ function MenuRow({
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, loading, refresh } = useUserStore();
+  const { t } = useLanguage();
   const [refreshing, setRefreshing] = React.useState(false);
   const [stats, setStats] = React.useState({ bookings: 0, earnings: 0 });
 
@@ -110,10 +112,10 @@ export default function ProfileScreen() {
   const language = profile?.language ?? 'en';
 
   const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('logoutTitle'), t('logoutConfirm'), [
+      { text: t('cancel'), style: 'cancel' },
       {
-        text: 'Logout',
+        text: t('logout'),
         style: 'destructive',
         onPress: async () => {
           try {
@@ -122,7 +124,7 @@ export default function ProfileScreen() {
             await clearSession();
             router.replace('/welcome/LanguageSelect');
           } catch (error) {
-            Alert.alert('Error', 'Failed to logout. Please try again.');
+            Alert.alert(t('error'), t('failedLogout'));
           }
         },
       },
@@ -147,7 +149,7 @@ export default function ProfileScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8304A" />}
       >
-        <Text style={styles.pageTitle}>My profile</Text>
+        <Text style={styles.pageTitle}>{t('myProfile')}</Text>
 
         {/* ── Profile Card ── */}
         <View style={styles.profileCard}>
@@ -167,11 +169,11 @@ export default function ProfileScreen() {
           <View style={styles.nameRow}>
             <Text style={styles.name}>{chefName || 'Partner'}</Text>
           </View>
-          <Text style={styles.specialty}>Partner | {city || 'City not set'}</Text>
+          <Text style={styles.specialty}>{t('partner')} | {city || t('cityNotSet')}</Text>
           <View style={styles.badgeRow}>
             {isVerified && (
               <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>✓ verified</Text>
+                <Text style={styles.verifiedText}>{t('verified')}</Text>
               </View>
             )}
             <View style={styles.chefIdBadge}>
@@ -185,33 +187,33 @@ export default function ProfileScreen() {
         <View style={styles.threeStatsRow}>
           <View style={styles.threeStatCard}>
             <Text style={styles.threeStatValue}>{stats.bookings}</Text>
-            <Text style={styles.threeStatLabel}>Bookings</Text>
+            <Text style={styles.threeStatLabel}>{t('bookings')}</Text>
           </View>
           <View style={styles.threeStatCard}>
             <Text style={styles.threeStatValue}>
               {stats.earnings >= 1000 ? `₹${(stats.earnings / 1000).toFixed(1)}k` : `₹${stats.earnings}`}
             </Text>
-            <Text style={styles.threeStatLabel}>Earnings</Text>
+            <Text style={styles.threeStatLabel}>{t('earnings')}</Text>
           </View>
           <View style={styles.threeStatCard}>
             <Text style={styles.threeStatValue}>{profile?.experience?.length || 0}</Text>
-            <Text style={styles.threeStatLabel}>Exp. Tags</Text>
+            <Text style={styles.threeStatLabel}>{t('expTags')}</Text>
           </View>
         </View>
 
         {/* ── Menu Items ── */}
         <View style={styles.menuSection}>
-          <MenuRow label="Account detail" onPress={() => router.push('/edit/AccountDetails')} />
+          <MenuRow label={t('accountDetail')} onPress={() => router.push('/edit/AccountDetails')} />
           <View style={styles.menuDivider} />
-          <MenuRow label="Bank details" onPress={() => router.push('/edit/EditDetails')} />
+          <MenuRow label={t('bankDetails')} onPress={() => router.push('/edit/EditDetails')} />
           <View style={styles.menuDivider} />
-          <MenuRow label="Refer a friend & Earn" badge="Earn upto ₹5000" onPress={() => router.push('/edit/ReferFriend')} />
+          <MenuRow label={t('referFriend')} badge={t('referBadge')} onPress={() => router.push('/edit/ReferFriend')} />
           <View style={styles.menuDivider} />
-          <MenuRow label="Change Language" onPress={() => router.push('/edit/ChangeLanguage')} />
+          <MenuRow label={t('changeLanguage')} onPress={() => router.push('/edit/ChangeLanguage')} />
         </View>
 
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.85}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>{t('logout')}</Text>
         </TouchableOpacity>
 
         <View style={{ height: 16 }} />

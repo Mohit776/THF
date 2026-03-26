@@ -24,6 +24,12 @@ import {
 
 const CACHE_KEY = 'user_profile_cache';
 
+const profileListeners = new Set<(profile: UserProfile | null) => void>();
+
+function notifyProfileListeners(p: UserProfile | null) {
+  profileListeners.forEach((l) => l(p));
+}
+
 export interface UseUserStoreReturn {
   profile: UserProfile | null;
   loading: boolean;
@@ -45,12 +51,25 @@ export function useUserStore(): UseUserStoreReturn {
   useEffect(() => {
     let cancelled = false;
 
+    // Listen for cross-component profile updates
+    const listener = (newProfile: UserProfile | null) => {
+      if (!cancelled) {
+        setProfile((prev) => {
+          if (JSON.stringify(prev) === JSON.stringify(newProfile)) return prev;
+          return newProfile ? { ...newProfile } : null;
+        });
+      }
+    };
+    profileListeners.add(listener);
+
     async function load() {
       try {
         // 1. Serve cache immediately for instant UI
         const cached = await AsyncStorage.getItem(CACHE_KEY);
         if (cached && !cancelled) {
-          setProfile(JSON.parse(cached));
+          const parsed = JSON.parse(cached);
+          setProfile(parsed);
+          notifyProfileListeners(parsed);
           setLoading(false);
         }
 
@@ -64,6 +83,7 @@ export function useUserStore(): UseUserStoreReturn {
         const fresh = await getUserProfile(uid);
         if (!cancelled) {
           setProfile(fresh);
+          notifyProfileListeners(fresh);
           setLoading(false);
           if (fresh) {
             await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(fresh));
@@ -78,7 +98,10 @@ export function useUserStore(): UseUserStoreReturn {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => { 
+      cancelled = true; 
+      profileListeners.delete(listener);
+    };
   }, []);
 
   // ── Refresh from Firestore ───────────────────────────────────────────
@@ -89,6 +112,7 @@ export function useUserStore(): UseUserStoreReturn {
       if (!uid) return;
       const fresh = await getUserProfile(uid);
       setProfile(fresh);
+      notifyProfileListeners(fresh);
       if (fresh) await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(fresh));
     } catch (err: any) {
       setError(err?.message ?? 'Refresh failed');
@@ -110,6 +134,10 @@ export function useUserStore(): UseUserStoreReturn {
           if (!prev) return prev;
           const updated = { ...prev, ...data };
           AsyncStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+          
+          // Use setTimeout to ensure we don't trigger state updates on unmounted components inside the same cycle
+          setTimeout(() => notifyProfileListeners(updated), 0);
+          
           return updated;
         });
       } catch (err: any) {

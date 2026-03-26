@@ -26,6 +26,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import Navbar from '../../components/Navbar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguage } from '@/src/hooks/useLanguage';
 const { width } = Dimensions.get('window');
 
 /* ── Types ── */
@@ -99,12 +100,14 @@ function BookingCard({
   onViewDetail,
   onLocation,
   onCallClient,
+  t,
 }: {
   booking: Booking;
   showActions: boolean;
   onViewDetail?: () => void;
   onLocation?: () => void;
   onCallClient?: () => void;
+  t: (key: any) => string;
 }) {
   return (
     <View style={bookingStyles.card}>
@@ -120,7 +123,7 @@ function BookingCard({
           <Text style={bookingStyles.nextUp}>{booking.nextUpLabel}</Text>
           <Text style={bookingStyles.clientName}>{booking.clientName}</Text>
           <Text style={bookingStyles.meta}>
-            {booking.occasion} | {booking.guests} guests | {booking.location}
+            {booking.occasion} | {booking.guests} {t('guests')} | {booking.location}
           </Text>
         </View>
       </View>
@@ -130,14 +133,14 @@ function BookingCard({
           <View style={bookingStyles.divider} />
           <View style={bookingStyles.actions}>
             <TouchableOpacity style={bookingStyles.viewBtn} onPress={onViewDetail} activeOpacity={0.8}>
-              <Text style={bookingStyles.viewBtnText}>View detail</Text>
+              <Text style={bookingStyles.viewBtnText}>{t('viewDetail')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={bookingStyles.locationBtn} onPress={onLocation} activeOpacity={0.8}>
-              <Text style={bookingStyles.locationBtnText}>Location</Text>
+              <Text style={bookingStyles.locationBtnText}>{t('location')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={bookingStyles.callBtn} onPress={onCallClient} activeOpacity={0.8}>
               <Ionicons name="call-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-              <Text style={bookingStyles.callBtnText}> Call Client</Text>
+              <Text style={bookingStyles.callBtnText}> {t('callClient')}</Text>
             </TouchableOpacity>
           </View>
         </>
@@ -154,11 +157,13 @@ function BroadcastedBookingCard({
   onAccept,
   isAccepting,
   onIgnore,
+  t,
 }: {
   booking: FirestoreBooking & { bookingId?: string };
   onAccept: () => void;
   isAccepting: boolean;
   onIgnore: () => void;
+  t: (key: any) => string;
 }) {
   const bTime = dayjs((booking.date as any).toDate?.() ?? booking.date);
   const slideAnim = React.useRef(new Animated.Value(100)).current; // slide up from 100px
@@ -183,7 +188,7 @@ function BroadcastedBookingCard({
 
         {/* Info */}
         <View style={bookingStyles.info}>
-          <Text style={[bookingStyles.nextUp, { color: '#E8304A', fontWeight: 'bold' }]}>NEW BOOKING AVAILABLE!</Text>
+          <Text style={[bookingStyles.nextUp, { color: '#E8304A', fontWeight: 'bold' }]}>{t('newBookingAvailable')}</Text>
           <Text style={bookingStyles.clientName}>{booking.clientName}</Text>
           <Text style={bookingStyles.meta}>
             {bTime.isValid() ? bTime.format('MMM DD, YYYY') : ''} | {booking.eventType} | {booking.guests} guests
@@ -192,7 +197,7 @@ function BroadcastedBookingCard({
             {booking.location}
           </Text>
           <Text style={{ marginTop: 4, fontWeight: 'bold', color: '#111', fontSize: 13 }}>
-            Amount: ₹{booking.amount}
+            {t('amount')}: ₹{booking.amount}
           </Text>
         </View>
       </View>
@@ -204,7 +209,7 @@ function BroadcastedBookingCard({
           onPress={onIgnore}
           activeOpacity={0.8}
         >
-          <Text style={[bookingStyles.locationBtnText, { color: '#666' }]}>Ignore</Text>
+          <Text style={[bookingStyles.locationBtnText, { color: '#666' }]}>{t('ignore')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -216,7 +221,7 @@ function BroadcastedBookingCard({
           {isAccepting ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={bookingStyles.locationBtnText}>Accept Booking</Text>
+            <Text style={bookingStyles.locationBtnText}>{t('acceptBooking')}</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -227,6 +232,7 @@ function BroadcastedBookingCard({
 /* ── Main Screen ── */
 export default function DashboardScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const { profile, loading: profileLoading, refresh: refreshProfile } = useUserStore();
   const [bookings, setBookings] = useState<FirestoreBooking[]>([]);
   const [bookingsLoading, setBookingsLoading] = useState(true);
@@ -288,7 +294,7 @@ export default function DashboardScreen() {
         await fetchDashboardData();
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to accept booking. It might have been claimed by someone else.');
+      Alert.alert(t('error'), error.message || 'Failed to accept booking. It might have been claimed by someone else.');
     } finally {
       setAcceptingBookingId(null);
     }
@@ -363,12 +369,12 @@ export default function DashboardScreen() {
         {/* ── Welcome Card ── */}
         <View style={styles.welcomeCard}>
           <View style={styles.welcomeLeft}>
-            <Text style={styles.welcomeHi}>Welcome!</Text>
+            <Text style={styles.welcomeHi}>{t('welcome')}</Text>
             <Text style={styles.welcomeName}>{chefName || 'Partner'}</Text>
             <View style={styles.badgeRow}>
               {isVerified && (
                 <View style={styles.verifiedBadge}>
-                  <Text style={styles.verifiedText}>✓ verified</Text>
+                  <Text style={styles.verifiedText}>{t('verified')}</Text>
                 </View>
               )}
               <View style={styles.chefIdBadge}>
@@ -403,52 +409,53 @@ export default function DashboardScreen() {
                   onAccept={() => b.bookingId && handleAcceptBroadcastedBooking(b.bookingId)}
                   isAccepting={acceptingBookingId === b.bookingId}
                   onIgnore={() => b.bookingId && handleIgnoreBroadcastedBooking(b.bookingId)}
+                  t={t}
                 />
              ))}
           </View>
         )}
 
         {/* ── Today's Summary ── */}
-        <Text style={styles.sectionTitle}>Today's Summary</Text>
+        <Text style={styles.sectionTitle}>{t('todaySummary')}</Text>
         <View style={styles.summaryRow}>
-          <SummaryCard icon={<BookingIcon />} label="Bookings" value={String(totalBookingsCount)} iconBg="#ffffff" />
-          <SummaryCard icon={<WalletIcon />} label="Earned" value={`₹${totalEarned}`} iconBg="#ffffff" />
-          <SummaryCard icon={<KycIcon />} label="Ratings" value={'4.8'} iconBg="#ffffff" />
+          <SummaryCard icon={<BookingIcon />} label={t('bookings')} value={String(totalBookingsCount)} iconBg="#ffffff" />
+          <SummaryCard icon={<WalletIcon />} label={t('earned')} value={`₹${totalEarned}`} iconBg="#ffffff" />
+          <SummaryCard icon={<KycIcon />} label={t('ratings')} value={'4.8'} iconBg="#ffffff" />
         </View>
 
-        <Text style={styles.sectionTitle}>Today's Bookings</Text>
+        <Text style={styles.sectionTitle}>{t('todayBookings')}</Text>
 
         {/* ── Today's Bookings ── */}
         {!profile?.kycDocuments ? (
           <View style={styles.verificationCard}>
-            <Text style={styles.verificationTitle}>You have not assigned any booking</Text>
+            <Text style={styles.verificationTitle}>{t('noBookingKyc')}</Text>
             <Text style={styles.verificationSubtitle}>
-              Why this? As per our company policy you need to upload your govt. approved documents with to verify your identity.
+              {t('kycRequired')}
             </Text>
             <TouchableOpacity
               style={styles.uploadBtn}
               onPress={() => router.push('/kyc/UploadDocuments_1')}
               activeOpacity={0.8}
             >
-              <Text style={styles.uploadBtnText}>Upload Document</Text>
+              <Text style={styles.uploadBtnText}>{t('uploadDocument')}</Text>
             </TouchableOpacity>
           </View>
         ) : (profile?.kycStatus === 'pending' || profile?.kycStatus === 'pending_verification') ? (
           <View style={styles.verificationCard}>
-            <Text style={styles.verificationTitle}>Your verification is in review</Text>
+            <Text style={styles.verificationTitle}>{t('pendingVerification')}</Text>
             <Text style={styles.verificationSubtitle}>
-              Please wait while our team verifies your documents. This usually takes 24-48 hours.
+              {t('pendingVerifMsg')}
             </Text>
           </View>
         ) : !isVerified ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>You have not assigned any booking</Text>
+            <Text style={styles.emptyText}>{t('noBookingKyc')}</Text>
           </View>
         ) : bookingsLoading && !refreshing ? (
           <ActivityIndicator color="#E8304A" style={{ marginTop: 20 }} />
         ) : todaysBookings.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No bookings for today</Text>
+            <Text style={styles.emptyText}>{t('noBookingsToday')}</Text>
           </View>
         ) : (
           todaysBookings.map((booking, index) => (
@@ -466,12 +473,13 @@ export default function DashboardScreen() {
                 phone: booking.phone,
               }}
               showActions={index === 0}
+              t={t}
               onViewDetail={() => {
                 setSelectedBooking({
                   id: booking.bookingId,
                   time: dayjs((booking.date as any).toDate?.() ?? booking.date).format('hh'),
                   period: dayjs((booking.date as any).toDate?.() ?? booking.date).format('a'),
-                  nextUpLabel: index === 0 ? 'Next up' : 'Upcoming',
+                  nextUpLabel: index === 0 ? t('nextUp') : t('upcoming'),
                   clientName: booking.clientName,
                   occasion: booking.eventType,
                   guests: booking.guests,
@@ -483,7 +491,7 @@ export default function DashboardScreen() {
                 if (booking.phone) {
                   Linking.openURL(`tel:${booking.phone}`);
                 } else {
-                  Alert.alert('Unavailable', 'Phone number not provided for this booking');
+                  Alert.alert(t('unavailable'), t('phoneNotProvided'));
                 }
               }}
               onLocation={() => {
@@ -517,17 +525,17 @@ export default function DashboardScreen() {
               {selectedBooking?.clientName} {selectedBooking?.occasion}
             </Text>
             <Text style={modalStyles.detailText}>
-              Time: {selectedBooking?.time} - {selectedBooking?.period}
+              {t('time')}: {selectedBooking?.time} - {selectedBooking?.period}
             </Text>
             <Text style={modalStyles.detailText}>
-              Location: {selectedBooking?.location}
+              {t('locationLabel')}: {selectedBooking?.location}
             </Text>
             <Text style={modalStyles.detailText}>
               {selectedBooking?.guests} guests | North Indian + Cake
             </Text>
             
             <View style={modalStyles.mapPlaceholder}>
-              <Text style={modalStyles.mapText}>Map Preview</Text>
+              <Text style={modalStyles.mapText}>{t('mapPreview')}</Text>
               <Text style={modalStyles.mapSubText}>{selectedBooking?.location}</Text>
             </View>
             
@@ -541,7 +549,7 @@ export default function DashboardScreen() {
                   }
                 }}
               >
-                <Text style={modalStyles.actionButtonText}>Get Direction</Text>
+                <Text style={modalStyles.actionButtonText}>{t('getDirection')}</Text>
               </TouchableOpacity>
               
               <TouchableOpacity 
@@ -551,12 +559,12 @@ export default function DashboardScreen() {
                   if (selectedBooking?.phone) {
                     Linking.openURL(`tel:${selectedBooking.phone}`);
                   } else {
-                    Alert.alert('Unavailable', 'Phone number not provided');
+                    Alert.alert(t('unavailable'), t('phoneNotProvided2'));
                   }
                 }}
               >
                 <Ionicons name="call-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
-                <Text style={modalStyles.actionButtonText}>Call Client</Text>
+                <Text style={modalStyles.actionButtonText}>{t('callClient')}</Text>
               </TouchableOpacity>
             </View>
           </View>

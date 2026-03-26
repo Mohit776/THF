@@ -11,11 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { auth } from '@/src/services/firebaseConfig';
-import { getUserProfile, updateUserProfile } from '@/src/services/userService';
+import { useUserStore } from '@/src/hooks/useUserStore';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const LANGUAGES = [
   { id: 'en', label: 'English' },
-  { id: 'hi', label: 'Hindi' },
+  { id: 'hi', label: 'हिंदी (Hindi)' },
 ];
 
 interface ChangeLanguageScreenProps {
@@ -29,50 +30,38 @@ export default function ChangeLanguageScreen({
 }: ChangeLanguageScreenProps) {
   const [selected, setSelected] = useState<string>(initialLanguage);
   const router = useRouter();
+  const { t } = useLanguage();
+  const { profile, updateProfile } = useUserStore();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const uid = auth.currentUser?.uid;
-        if (!uid) {
-          setLoading(false);
-          return;
-        }
-        const profile = await getUserProfile(uid);
-        if (profile?.language) {
-          setSelected(profile.language);
-        }
-      } catch (err) {
-        console.error('Error loading language:', err);
-      } finally {
-        setLoading(false);
-      }
+    if (profile?.language) {
+      setSelected(profile.language);
     }
-    load();
-  }, []);
+    setLoading(false);
+  }, [profile?.language]);
 
   const handleSave = async () => {
     if (saving) return;
 
     const uid = auth.currentUser?.uid;
     if (!uid) {
-      Alert.alert('Error', 'Not logged in. Please restart the app.');
+      Alert.alert(t('error'), t('notLoggedIn'));
       return;
     }
 
     setSaving(true);
     try {
-      await updateUserProfile(uid, { language: selected });
+      await updateProfile({ language: selected });
       if (onSave) onSave(selected);
-      Alert.alert('Saved', 'Your preferred language has been updated.', [
-        { text: 'OK', onPress: () => router.back() }
+      Alert.alert(t('savedTitle'), t('savedMsg'), [
+        { text: t('ok'), onPress: () => router.back() }
       ]);
     } catch (err: any) {
       console.error('[ChangeLanguageScreen] error:', err);
-      Alert.alert('Error', err?.message ?? 'Failed to update language.');
+      Alert.alert(t('error'), err?.message ?? t('failedUpdateLang'));
     } finally {
       setSaving(false);
     }
@@ -100,7 +89,7 @@ export default function ChangeLanguageScreen({
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.heading}>Change Language</Text>
+        <Text style={styles.heading}>{t('changeLanguage')}</Text>
 
         <View style={styles.optionsList}>
           {LANGUAGES.map((lang) => (
@@ -127,7 +116,7 @@ export default function ChangeLanguageScreen({
           {saving ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={styles.saveText}>Save & Update</Text>
+            <Text style={styles.saveText}>{t('saveUpdate')}</Text>
           )}
         </TouchableOpacity>
       </View>

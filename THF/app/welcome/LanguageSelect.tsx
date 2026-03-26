@@ -10,12 +10,13 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const { width, height } = Dimensions.get('window');
 
 const LANGUAGES = [
   { id: 'en', label: 'English' },
-  { id: 'hi', label: 'Hindi' },
+  { id: 'hi', label: 'हिंदी (Hindi)' },
 ];
 
 interface LanguageSelectScreenProps {
@@ -25,6 +26,7 @@ interface LanguageSelectScreenProps {
 export default function LanguageSelectScreen({ onContinue }: LanguageSelectScreenProps) {
   const router = useRouter();
   const [selected, setSelected] = useState('en');
+  const { t } = useLanguage();
 
   const handleContinue = (mode: 'login' | 'signup') => {
     if (onContinue) {
@@ -54,7 +56,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
 
       {/* Bottom Sheet */}
       <View style={styles.bottomSheet}>
-        <Text style={styles.title}>Select a language to continue</Text>
+        <Text style={styles.title}>{t('selectLanguageTitle')}</Text>
 
         {/* Language Options */}
         <View style={styles.optionsRow}>
@@ -94,7 +96,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
           onPress={() => handleContinue('signup')}
           activeOpacity={0.85}
         >
-          <Text style={styles.continueText}>Sign up</Text>
+          <Text style={styles.continueText}>{t('signUp')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -102,7 +104,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
           onPress={() => handleContinue('login')}
           activeOpacity={0.85}
         >
-          <Text style={styles.loginText}>Login</Text>
+          <Text style={styles.loginText}>{t('login')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

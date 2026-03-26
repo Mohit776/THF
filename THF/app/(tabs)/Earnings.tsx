@@ -14,6 +14,7 @@ import Navbar from '../../components/Navbar';
 import { auth } from '@/src/services/firebaseConfig';
 import { getPartnerTransactions, type Transaction as FSTransaction } from '@/src/services/transactionService';
 import dayjs from 'dayjs';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 /* ── Local display type for TransactionRow component ── */
 interface DisplayTransaction {
@@ -70,6 +71,7 @@ export default function EarningsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const month = dayjs().format('MMMM YYYY');
+  const { t } = useLanguage();
 
   const fetchTransactions = React.useCallback(async () => {
     const uid = auth.currentUser?.uid;
@@ -108,34 +110,34 @@ export default function EarningsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8304A" />}
       >
-        <Text style={styles.pageTitle}>My Earnings</Text>
+        <Text style={styles.pageTitle}>{t('myEarnings')}</Text>
         <Text style={styles.monthLabel}>{month}</Text>
 
         {/* ── Summary Card ── */}
         <View style={styles.summaryCard}>
-          <Text style={styles.totalLabel}>Total earned - {month}</Text>
+          <Text style={styles.totalLabel}>{t('totalEarned')} - {month}</Text>
           <Text style={styles.totalAmount}>₹{formatAmount(totalEarned)}</Text>
-          <Text style={styles.comparison}>{bookingsCount} transactions this month</Text>
+          <Text style={styles.comparison}>{bookingsCount} {t('transactionsThisMonth')}</Text>
           <View style={styles.divider} />
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>{bookingsCount}</Text>
-              <Text style={styles.statLabel}>Transactions</Text>
+              <Text style={styles.statLabel}>{t('transactions')}</Text>
             </View>
             <View style={styles.statItem}>
               <Text style={styles.statValue}>₹{formatAmount(totalEarned)}</Text>
-              <Text style={styles.statLabel}>Total Earned</Text>
+              <Text style={styles.statLabel}>{t('totalEarnedLabel')}</Text>
             </View>
           </View>
         </View>
 
         {/* ── Recent Transactions ── */}
-        <Text style={styles.sectionTitle}>Recent transactions</Text>
+        <Text style={styles.sectionTitle}>{t('recentTransactions')}</Text>
         {loading && !refreshing ? (
           <ActivityIndicator color="#E8304A" style={{ marginTop: 16 }} />
         ) : transactions.length === 0 ? (
           <View style={styles.emptyBox}>
-            <Text style={styles.emptyText}>No transactions yet</Text>
+            <Text style={styles.emptyText}>{t('noTransactions')}</Text>
           </View>
         ) : (
           <View style={styles.transactionsList}>

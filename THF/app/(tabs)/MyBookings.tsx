@@ -18,6 +18,7 @@ import Navbar from '../../components/Navbar';
 import { auth } from '@/src/services/firebaseConfig';
 import { getPartnerBookings, type Booking as FSBooking } from '@/src/services/bookingService';
 import dayjs from 'dayjs';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 /* ── Types ── */
 type BookingStatus = 'Today' | 'Active' | 'Completed' | 'Upcoming';
@@ -119,6 +120,7 @@ export default function MyBookingsScreen() {
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<FilterTab>('All');
   const [refreshing, setRefreshing] = useState(false);
+  const { t } = useLanguage();
 
   // OTP and Timer State
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -146,7 +148,7 @@ export default function MyBookingsScreen() {
       setTimerSeconds(0);
       setOtpText('');
     } else {
-      Alert.alert('Invalid OTP', 'Please enter a valid OTP provided by the client.');
+      Alert.alert(t('invalidOtp'), t('invalidOtpMsg'));
     }
   };
 
@@ -206,7 +208,7 @@ export default function MyBookingsScreen() {
   const nextUpBooking = mappedBookings.find(b => b.status === 'Today' || b.status === 'Active');
   const nextUp: NextUpBooking | undefined = nextUpBooking
     ? {
-        label: nextUpBooking.status === 'Active' ? 'Active booking' : 'Next up today',
+        label: nextUpBooking.status === 'Active' ? t('activeBooking') : t('nextUpToday'),
         title: nextUpBooking.title,
         time: nextUpBooking.time,
         locationNote: nextUpBooking.location,
@@ -229,7 +231,7 @@ export default function MyBookingsScreen() {
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8304A" />}
       >
-        <Text style={styles.pageTitle}>My Bookings</Text>
+        <Text style={styles.pageTitle}>{t('myBookings')}</Text>
         <Text style={styles.dateLabel}>{dateLabel}</Text>
 
         {/* ── Next Up Card ── */}
@@ -237,8 +239,8 @@ export default function MyBookingsScreen() {
           <View style={styles.nextUpCard}>
             <Text style={styles.nextUpLabel}>{nextUp.label}</Text>
             <Text style={styles.nextUpTitle}>{nextUp.title}</Text>
-            <Text style={styles.nextUpMeta}>Time: {nextUp.time}</Text>
-            <Text style={styles.nextUpMeta}>Location: {nextUp.locationNote}</Text>
+            <Text style={styles.nextUpMeta}>{t('time')}: {nextUp.time}</Text>
+            <Text style={styles.nextUpMeta}>{t('locationLabel')}: {nextUp.locationNote}</Text>
             <Text style={styles.nextUpMeta}>{nextUp.guests} guests | {nextUp.cuisine}</Text>
 
             {/* Timer or Actions */}
@@ -247,17 +249,17 @@ export default function MyBookingsScreen() {
                  <View style={styles.timerRow}>
                    <View style={styles.timerCol}>
                      <Text style={styles.timerVal}>{formatTime(timerSeconds).split(':')[0]}</Text>
-                     <Text style={styles.timerUnit}>HOURS</Text>
+                     <Text style={styles.timerUnit}>{t('hours')}</Text>
                    </View>
                    <Text style={styles.timerColon}>:</Text>
                    <View style={styles.timerCol}>
                      <Text style={styles.timerVal}>{formatTime(timerSeconds).split(':')[1]}</Text>
-                     <Text style={styles.timerUnit}>MINUTES</Text>
+                     <Text style={styles.timerUnit}>{t('minutes')}</Text>
                    </View>
                    <Text style={styles.timerColon}>:</Text>
                    <View style={styles.timerCol}>
                      <Text style={styles.timerVal}>{formatTime(timerSeconds).split(':')[2]}</Text>
-                     <Text style={styles.timerUnit}>SECONDS</Text>
+                     <Text style={styles.timerUnit}>{t('seconds')}</Text>
                    </View>
                  </View>
                  <View style={styles.timerActions}>
@@ -271,7 +273,7 @@ export default function MyBookingsScreen() {
                         setShowOtpModal(false);
                      }}
                    >
-                     <Text style={styles.cancelBtnText}>Cancel</Text>
+                     <Text style={styles.cancelBtnText}>{t('cancel')}</Text>
                    </TouchableOpacity>
                    <TouchableOpacity 
                      style={styles.pauseBtn} 
@@ -285,7 +287,7 @@ export default function MyBookingsScreen() {
                         }
                      }}
                    >
-                     <Text style={styles.pauseBtnText}>{isPaused ? 'Resume' : 'Pause'}</Text>
+                     <Text style={styles.pauseBtnText}>{isPaused ? t('resume') : t('pause')}</Text>
                    </TouchableOpacity>
                  </View>
                </View>
@@ -296,7 +298,7 @@ export default function MyBookingsScreen() {
                   activeOpacity={0.8}
                   onPress={() => setShowOtpModal(true)}
                 >
-                  <Text style={[styles.navBtnText, { color: '#fff' }]}>Reached to Location</Text>
+                  <Text style={[styles.navBtnText, { color: '#fff' }]}>{t('reachedLocation')}</Text>
                 </TouchableOpacity>
 
                 <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-between' }}>
@@ -309,7 +311,7 @@ export default function MyBookingsScreen() {
                     }
                   }}
                 >
-                  <Text style={styles.navBtnText}>Navigate location</Text>
+                  <Text style={styles.navBtnText}>{t('navigateLocation')}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={[styles.callBtn, { flex: 1 }]} 
@@ -318,11 +320,11 @@ export default function MyBookingsScreen() {
                     if (nextUp.phone) {
                       Linking.openURL(`tel:${nextUp.phone}`);
                     } else {
-                      Alert.alert('Unavailable', 'Phone number not provided');
+                      Alert.alert(t('unavailable'), t('phoneNotProvided2'));
                     }
                   }}
                 >
-                  <Text style={styles.callBtnText}>Call Client</Text>
+                  <Text style={styles.callBtnText}>{t('callClient')}</Text>
                 </TouchableOpacity>
                 </View>
               </View>
@@ -349,7 +351,7 @@ export default function MyBookingsScreen() {
           <ActivityIndicator color="#E8304A" style={{ marginTop: 20 }} />
         ) : filteredBookings.length === 0 ? (
           <View style={styles.emptyCard}>
-            <Text style={styles.emptyText}>No bookings found</Text>
+            <Text style={styles.emptyText}>{t('noBookingsFound')}</Text>
           </View>
         ) : (
           <View style={styles.bookingsList}>
@@ -366,10 +368,10 @@ export default function MyBookingsScreen() {
       <Modal visible={showOtpModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Share the confirmation OTP to the client</Text>
+            <Text style={styles.modalTitle}>{t('otpModalTitle')}</Text>
             <TextInput 
               style={styles.otpInput} 
-              placeholder="Enter OTP" 
+              placeholder={t('enterOtp')} 
               placeholderTextColor="#aaa"
               keyboardType="number-pad"
               value={otpText}
@@ -377,11 +379,11 @@ export default function MyBookingsScreen() {
               maxLength={6}
             />
             <TouchableOpacity style={styles.verifyBtn} onPress={verifyOtp} activeOpacity={0.8}>
-              <Text style={styles.verifyBtnText}>Verify OTP</Text>
+              <Text style={styles.verifyBtnText}>{t('verifyOtp')}</Text>
             </TouchableOpacity>
             
             <TouchableOpacity style={{ marginTop: 16 }} onPress={() => setShowOtpModal(false)}>
-              <Text style={{ color: '#888', fontWeight: '500' }}>Cancel</Text>
+              <Text style={{ color: '#888', fontWeight: '500' }}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
