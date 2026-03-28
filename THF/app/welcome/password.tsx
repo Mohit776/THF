@@ -2,6 +2,7 @@ import { savePhonePassword } from '@/lib/auth';
 import { auth } from '@/src/services/firebaseConfig';
 import { saveSession } from '@/src/services/sessionStorage';
 import { getUserProfile } from '@/src/services/userService';
+import { useLanguage } from '@/src/hooks/useLanguage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import Svg, { Path } from 'react-native-svg';
@@ -37,6 +38,7 @@ const EyeOffIcon = ({ stroke = "#6B7280" }) => (
 );
 export default function CreatePasswordScreen() {
   const router = useRouter();
+  const { t } = useLanguage();
   const params = useLocalSearchParams<{ phoneNumber?: string }>();
   const phoneNumber = params.phoneNumber ?? auth.currentUser?.phoneNumber ?? '';
 
@@ -105,7 +107,7 @@ export default function CreatePasswordScreen() {
         </TouchableOpacity>
 
         {/* Title */}
-        <Text style={styles.title}>Create Password</Text>
+        <Text style={styles.title}>{t('createPasswordTitle')}</Text>
 
         {/* Password Field */}
         <View style={[styles.inputWrapper, focusedPassword && styles.inputWrapperFocused]}>
@@ -115,7 +117,7 @@ export default function CreatePasswordScreen() {
               (focusedPassword || password.length > 0) && styles.floatingLabelFocused,
             ]}
           >
-            Enter Password
+            {t('newPassword')}
           </Text>
           <TextInput
             style={styles.input}
@@ -146,7 +148,7 @@ export default function CreatePasswordScreen() {
               (focusedConfirm || confirmPassword.length > 0) && styles.floatingLabelFocused,
             ]}
           >
-            Confirm Password
+            {t('confirmPassword')}
           </Text>
           <TextInput
             style={styles.input}
@@ -169,7 +171,7 @@ export default function CreatePasswordScreen() {
 
         {/* Mismatch hint */}
         {confirmPassword.length > 0 && !passwordsMatch && (
-          <Text style={styles.mismatchText}>Passwords do not match</Text>
+          <Text style={styles.mismatchText}>{t('passwordMismatch')}</Text>
         )}
 
         {/* Continue Button */}
@@ -188,7 +190,7 @@ export default function CreatePasswordScreen() {
                 canContinue && styles.continueTextActive,
               ]}
             >
-              Continue
+              {t('continueBtn')}
             </Text>
           )}
         </TouchableOpacity>

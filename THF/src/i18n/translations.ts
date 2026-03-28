@@ -10,6 +10,10 @@ export type Language = 'en' | 'hi';
 const translations = {
   // ── Welcome / Language Select ──────────────────────────────────────────
   selectLanguageTitle:  { en: 'Select a language to continue', hi: 'जारी रखने के लिए भाषा चुनें' },
+  welcomeTitle:         { en: 'Welcome to THF Partner', hi: 'THF पार्टनर में आपका स्वागत है' },
+  welcomeSubtitle:      { en: 'Your one-stop solution for all your home service needs.', hi: 'आपकी सभी घरेलू सेवा आवश्यकताओं के लिए आपका वन-स्टॉप समाधान।' },
+  welcomeDescription:   { en: 'Join our network of trusted professionals and grow your business.', hi: 'विश्वसनीय पेशेवरों के हमारे नेटवर्क में शामिल हों और अपना व्यवसाय बढ़ाएं।' },
+  getStarted:           { en: 'Get Started', hi: 'शुरू करें' },
   signUp:               { en: 'Sign up',     hi: 'साइन अप करें' },
   login:                { en: 'Login',       hi: 'लॉगिन करें'  },
 
@@ -42,6 +46,15 @@ const translations = {
   uploadDocument:       { en: 'Upload Document',   hi: 'दस्तावेज़ अपलोड करें' },
   pendingVerification:  { en: 'Your verification is in review', hi: 'आपका सत्यापन समीक्षाधीन है' },
   pendingVerifMsg:      { en: 'Please wait while our team verifies your documents. This usually takes 24-48 hours.', hi: 'कृपया प्रतीक्षा करें, हमारी टीम आपके दस्तावेज़ सत्यापित कर रही है। इसमें आमतौर पर 24-48 घंटे लगते हैं।' },
+  kycTitle:             { en: 'KYC Verification', hi: 'केवाईसी सत्यापन' },
+  kycSubtitle:          { en: 'Please complete your KYC verification to start accepting bookings.', hi: 'बुकिंग स्वीकार करना शुरू करने के लिए कृपया अपना केवाईसी सत्यापन पूरा करें।' },
+  kycDescription:       { en: 'As per our company policy, you need to upload your government-approved documents to verify your identity.', hi: 'हमारी कंपनी नीति के अनुसार, आपको अपनी पहचान सत्यापित करने के लिए सरकारी-अनुमोदित दस्तावेज़ अपलोड करने होंगे।' },
+  uploadDocuments:      { en: 'Upload Documents', hi: 'दस्तावेज़ अपलोड करें' },
+  verificationPending:  { en: 'Verification Pending', hi: 'सत्यापन लंबित' },
+  verificationPendingMsg: { en: 'Your verification is in review. Please wait while our team verifies your documents. This usually takes 24-48 hours.', hi: 'आपका सत्यापन समीक्षाधीन है। कृपया प्रतीक्षा करें जब तक हमारी टीम आपके दस्तावेज़ों को सत्यापित करती है। इसमें आमतौर पर 24-48 घंटे लगते हैं।' },
+  verificationFailed:   { en: 'Verification Failed', hi: 'सत्यापन विफल' },
+  verificationFailedMsg: { en: 'Your KYC verification failed. Please re-upload your documents or contact support.', hi: 'आपका केवाईसी सत्यापन विफल हो गया। कृपया अपने दस्तावेज़ फिर से अपलोड करें या सहायता से संपर्क करें।' },
+  reUploadDocuments:    { en: 'Re-upload Documents', hi: 'दस्तावेज़ पुनः अपलोड करें' },
   noBookingsToday:      { en: 'No bookings for today', hi: 'आज की कोई बुकिंग नहीं है' },
   getDirection:         { en: 'Get Direction',     hi: 'दिशा प्राप्त करें'    },
   mapPreview:           { en: 'Map Preview',       hi: 'मानचित्र पूर्वावलोकन' },
@@ -102,6 +115,94 @@ const translations = {
   totalEarnedLabel:     { en: 'Total Earned',            hi: 'कुल कमाई'             },
   recentTransactions:   { en: 'Recent transactions',     hi: 'हाल के लेनदेन'        },
   noTransactions:       { en: 'No transactions yet',     hi: 'अभी तक कोई लेनदेन नहीं' },
+
+  // ── Mobile Login / Welcome ────────────────────────────────────────────
+  loginWithMobile:      { en: 'Login with mobile and password', hi: 'मोबाइल और पासवर्ड से लॉगिन करें' },
+  signUpWithMobile:     { en: 'Sign up with mobile number',     hi: 'मोबाइल नंबर से साइन अप करें'    },
+  enterMobileNumber:    { en: 'Enter your mobile number',       hi: 'अपना मोबाइल नंबर दर्ज करें'     },
+  enterPassword:        { en: 'Enter your password',            hi: 'अपना पासवर्ड दर्ज करें'          },
+  getStarted2:          { en: 'Get Started',                    hi: 'शुरू करें'                       },
+  alreadyHaveAccount:   { en: 'Already have an account? Login', hi: 'पहले से खाता है? लॉगिन करें'    },
+  dontHaveAccount:      { en: "Don't have an account? Sign up", hi: 'खाता नहीं है? साइन अप करें'     },
+  alreadyRegistered:    { en: 'Already Registered',             hi: 'पहले से पंजीकृत'                 },
+  alreadyRegisteredMsg: { en: 'This mobile number is already registered. Please login instead.', hi: 'यह मोबाइल नंबर पहले से पंजीकृत है। कृपया लॉगिन करें।' },
+
+  // ── OTP Screen ────────────────────────────────────────────────────────
+  otpSentTo:            { en: 'We sent an OTP to',              hi: 'हमने OTP भेजा है'                },
+  resendOtp:            { en: 'Resend OTP',                     hi: 'OTP पुनः भेजें'                  },
+  resendIn:             { en: 'Resend in',                      hi: 'पुनः भेजें'                      },
+  verifying:            { en: 'Verifying...',                   hi: 'सत्यापित हो रहा है...'           },
+  verify:               { en: 'Verify',                         hi: 'सत्यापित करें'                   },
+
+  // ── Password Screen ───────────────────────────────────────────────────
+  createPasswordTitle:  { en: 'Create a Password',              hi: 'पासवर्ड बनाएं'                   },
+  createPasswordSub:    { en: 'Set a strong password to secure your account', hi: 'अपना खाता सुरक्षित करने के लिए मजबूत पासवर्ड बनाएं' },
+  newPassword:          { en: 'New Password',                   hi: 'नया पासवर्ड'                     },
+  confirmPassword:      { en: 'Confirm Password',               hi: 'पासवर्ड की पुष्टि करें'          },
+  passwordMismatch:     { en: "Passwords don't match",          hi: 'पासवर्ड मेल नहीं खाते'           },
+  passwordTooShort:     { en: 'Password must be at least 8 characters', hi: 'पासवर्ड कम से कम 8 अक्षर का होना चाहिए' },
+  savePassword:         { en: 'Save Password',                  hi: 'पासवर्ड सहेजें'                  },
+  passwordSavedTitle:   { en: 'Password Saved',                 hi: 'पासवर्ड सहेजा गया'               },
+  passwordSavedMsg:     { en: 'Your password has been set successfully.',  hi: 'आपका पासवर्ड सफलतापूर्वक सेट हो गया है।' },
+  failedPassword:       { en: 'Failed to save password. Please try again.', hi: 'पासवर्ड सहेजने में विफल। कृपया पुनः प्रयास करें।' },
+
+  // ── KYC – Details ─────────────────────────────────────────────────────
+  kycDetailsHeading:    { en: 'Please share the details',       hi: 'कृपया विवरण साझा करें'           },
+  kycDetailsSub:        { en: 'To sign up to an account in the application, enter your details below.', hi: 'खाता बनाने के लिए नीचे अपना विवरण दर्ज करें।' },
+  enterName:            { en: 'Enter Name',                     hi: 'नाम दर्ज करें'                   },
+  enterEmail:           { en: 'Enter Email (Optional)',          hi: 'ईमेल दर्ज करें (वैकल्पिक)'      },
+  emergencyContact:     { en: 'Emergency contact number',       hi: 'आपातकालीन संपर्क नंबर'           },
+  selectGender:         { en: 'Select Gender',                  hi: 'लिंग चुनें'                      },
+  selectCity:           { en: 'Select City',                    hi: 'शहर चुनें'                       },
+  addressLabel:         { en: 'Address',                        hi: 'पता'                             },
+  register:             { en: 'Register',                       hi: 'पंजीकरण करें'                    },
+
+  // ── KYC – Aadhar ──────────────────────────────────────────────────────
+  aadharHeading:        { en: 'Enter your Aadhar details',      hi: 'अपना आधार विवरण दर्ज करें'       },
+  uploadDocSub:         { en: 'Upload your own documents for a faster process!', hi: 'तेज़ प्रक्रिया के लिए अपने दस्तावेज़ अपलोड करें!' },
+  enterAadhar:          { en: 'Enter Aadhar number',            hi: 'आधार नंबर दर्ज करें'             },
+  aadharAuthNote:       { en: "By clicking 'Continue' you give authorization to verify your Aadhar card.", hi: "'जारी रखें' दबाने से आप अपने आधार कार्ड की जाँच की अनुमति देते हैं।" },
+  uploadFront:          { en: 'Upload Front',                   hi: 'सामने अपलोड करें'                },
+  uploadingFront:       { en: 'Uploading Front...',             hi: 'अपलोड हो रहा है...'              },
+  uploadBack:           { en: 'Upload Back',                    hi: 'पीछे अपलोड करें'                 },
+  uploadingBack:        { en: 'Uploading Back...',              hi: 'अपलोड हो रहा है...'              },
+  skipLater:            { en: "Skip, I'll do it later",         hi: 'छोड़ें, बाद में करूँगा'           },
+  uploadAadharFront:    { en: 'Upload Aadhar Front',            hi: 'आधार सामने अपलोड करें'           },
+  uploadAadharBack:     { en: 'Upload Aadhar Back',             hi: 'आधार पीछे अपलोड करें'            },
+  chooseOption:         { en: 'Choose an option',               hi: 'एक विकल्प चुनें'                 },
+  takePhoto:            { en: 'Take Photo',                     hi: 'फ़ोटो लें'                       },
+  chooseGallery:        { en: 'Choose from Gallery',            hi: 'गैलरी से चुनें'                  },
+  permRequired:         { en: 'Permission Required',            hi: 'अनुमति आवश्यक'                   },
+  cameraPermDoc:        { en: 'Please allow camera access to upload a document.', hi: 'दस्तावेज़ अपलोड करने के लिए कैमरा एक्सेस की अनुमति दें।' },
+  galleryPermDoc:       { en: 'Please allow gallery access to choose a document.', hi: 'दस्तावेज़ चुनने के लिए गैलरी एक्सेस की अनुमति दें।' },
+  uploadFailed:         { en: 'Upload failed',                  hi: 'अपलोड विफल'                      },
+
+  // ── KYC – PAN ─────────────────────────────────────────────────────────
+  panHeading:           { en: 'Enter your Pan details (Optional)', hi: 'अपना PAN विवरण दर्ज करें (वैकल्पिक)' },
+  enterPan:             { en: 'Enter PAN number',               hi: 'PAN नंबर दर्ज करें'              },
+  panAuthNote:          { en: "By clicking 'Continue' you give authorization to verify your PAN card.", hi: "'जारी रखें' दबाने से आप अपने PAN कार्ड की जाँच की अनुमति देते हैं।" },
+  uploading:            { en: 'Uploading...',                   hi: 'अपलोड हो रहा है...'              },
+  noImageSelected:      { en: 'No image selected',             hi: 'कोई छवि नहीं चुनी गई'            },
+
+  // ── KYC – Selfie ──────────────────────────────────────────────────────
+  selfieHeading:        { en: "Let's click a selfie",           hi: 'चलिए एक सेल्फी लेते हैं'         },
+  selfieSub:            { en: 'Please remove spectacles, hat and mask. A clearly visible face will get approved faster.', hi: 'कृपया चश्मा, टोपी और मास्क हटाएं। साफ़ दिखने वाला चेहरा जल्दी स्वीकृत होगा।' },
+  proceedCapture:       { en: 'Proceed to Capture',             hi: 'तस्वीर लेने के लिए आगे बढ़ें'    },
+  uploadPhoto:          { en: 'Upload Photo',                   hi: 'फ़ोटो अपलोड करें'                },
+  camPermSelfie:        { en: 'Please allow camera access to take a selfie.', hi: 'सेल्फी लेने के लिए कैमरा एक्सेस की अनुमति दें।' },
+  galPermSelfie:        { en: 'Please allow gallery access to choose a photo.', hi: 'फ़ोटो चुनने के लिए गैलरी एक्सेस की अनुमति दें।' },
+
+  // ── KYC – Experience ──────────────────────────────────────────────────
+  expHeading:           { en: 'Please share your experience',   hi: 'कृपया अपना अनुभव साझा करें'      },
+  expSub:               { en: 'This will help us to understand the area of expertise so that we could allocate the bookings accordingly', hi: 'यह हमें आपकी विशेषज्ञता के क्षेत्र को समझने में मदद करेगा ताकि हम बुकिंग आवंटित कर सकें।' },
+  continueBtn:          { en: 'Continue',                       hi: 'जारी रखें'                       },
+
+  // ── KYC – Upload Documents ────────────────────────────────────────────
+  uploadDocsHeading:    { en: 'Upload documents',               hi: 'दस्तावेज़ अपलोड करें'             },
+  uploadDocsSub:        { en: 'Please submit the below documents for verification & upload originals to avoid rejection', hi: 'कृपया नीचे दिए गए दस्तावेज़ सत्यापन के लिए जमा करें और मूल दस्तावेज़ अपलोड करें।' },
+  docSelfie:            { en: 'Upload profile picture (Selfie)', hi: 'प्रोफाइल फ़ोटो अपलोड करें (सेल्फी)' },
+  docAadhar:            { en: 'Upload Aadhar card front & back', hi: 'आधार कार्ड सामने और पीछे अपलोड करें' },
+  docPan:               { en: 'Upload PAN number (Optional)',   hi: 'PAN नंबर अपलोड करें (वैकल्पिक)'  },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

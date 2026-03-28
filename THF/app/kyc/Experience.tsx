@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth } from '@/src/services/firebaseConfig';
 import { updateUserProfile, getUserProfile } from '@/src/services/userService';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const PROFILE_CACHE_KEY = 'user_profile_cache';
 
@@ -48,6 +49,7 @@ interface ExperienceScreenProps {
 
 export default function ExperienceScreen({ onBack, onContinue }: ExperienceScreenProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -118,10 +120,8 @@ export default function ExperienceScreen({ onBack, onContinue }: ExperienceScree
         showsVerticalScrollIndicator={false}
       >
         {/* Heading */}
-        <Text style={styles.heading}>Please share your experience</Text>
-        <Text style={styles.subheading}>
-          This will help us to understand the area of expertise so that we could allocate the bookings accordingly
-        </Text>
+        <Text style={styles.heading}>{t('expHeading')}</Text>
+        <Text style={styles.subheading}>{t('expSub')}</Text>
 
         {/* Options */}
         <View style={styles.optionsList}>
@@ -160,9 +160,9 @@ export default function ExperienceScreen({ onBack, onContinue }: ExperienceScree
           {saving ? (
             <ActivityIndicator color="#fff" size="small" />
           ) : (
-            <Text style={[styles.continueText, selected.length > 0 && styles.continueTextActive]}>
-              Continue
-            </Text>
+              <Text style={[styles.continueText, selected.length > 0 && styles.continueTextActive]}>
+                {t('continueBtn')}
+              </Text>
           )}
         </TouchableOpacity>
       </View>

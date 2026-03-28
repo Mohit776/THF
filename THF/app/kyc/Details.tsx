@@ -29,6 +29,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { auth } from '@/src/services/firebaseConfig';
 import { createUserProfile, getUserProfile } from '@/src/services/userService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const PROFILE_CACHE_KEY = 'user_profile_cache';
 
@@ -169,6 +170,7 @@ interface DetailsScreenProps {
 
 export default function DetailsScreen({ onBack, onRegister }: DetailsScreenProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [emergency, setEmergency] = useState('');
@@ -288,19 +290,17 @@ export default function DetailsScreen({ onBack, onRegister }: DetailsScreenProps
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.heading}>Please share the details</Text>
-          <Text style={styles.subheading}>
-            To sign up to an account in the application, enter your details below.
-          </Text>
+          <Text style={styles.heading}>{t('kycDetailsHeading')}</Text>
+          <Text style={styles.subheading}>{t('kycDetailsSub')}</Text>
 
-          <FloatingInput label="Enter Name" value={name} onChangeText={setName} isValid={name.trim().length > 1} editable={!saving} />
-          <FloatingInput label="Enter Email (Optional)" value={email} onChangeText={setEmail} keyboardType="email-address" isValid={email.length > 0 ? isValidEmail(email) : true} editable={!saving} />
-          <FloatingInput label="Emergency contact number" value={emergency} onChangeText={setEmergency} keyboardType="phone-pad" isValid={isValidPhone(emergency)} editable={!saving} />
+          <FloatingInput label={t('enterName')} value={name} onChangeText={setName} isValid={name.trim().length > 1} editable={!saving} />
+          <FloatingInput label={t('enterEmail')} value={email} onChangeText={setEmail} keyboardType="email-address" isValid={email.length > 0 ? isValidEmail(email) : true} editable={!saving} />
+          <FloatingInput label={t('emergencyContact')} value={emergency} onChangeText={setEmergency} keyboardType="phone-pad" isValid={isValidPhone(emergency)} editable={!saving} />
 
-          <DropdownField label="Select Gender" value={gender} options={GENDERS} onSelect={setGender} />
-          <DropdownField label="Select City" value={city} options={CITIES} onSelect={setCity} />
+          <DropdownField label={t('selectGender')} value={gender} options={GENDERS} onSelect={setGender} />
+          <DropdownField label={t('selectCity')} value={city} options={CITIES} onSelect={setCity} />
 
-          <FloatingInput label="Address" value={address} onChangeText={setAddress} multiline isValid={address.trim().length > 5} editable={!saving} />
+          <FloatingInput label={t('addressLabel')} value={address} onChangeText={setAddress} multiline isValid={address.trim().length > 5} editable={!saving} />
 
           <View style={{ height: 16 }} />
         </ScrollView>
@@ -317,7 +317,7 @@ export default function DetailsScreen({ onBack, onRegister }: DetailsScreenProps
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={[styles.registerText, allFilled && styles.registerTextActive]}>
-                Register
+                {t('register')}
               </Text>
             )}
           </TouchableOpacity>

@@ -18,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const { width } = Dimensions.get('window');
 
@@ -34,6 +35,7 @@ interface AadharScreenProps {
 
 export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [aadhar, setAadhar] = useState('');
   const [focused, setFocused] = useState(false);
   const [frontImageUri, setFrontImageUri] = useState<string | null>(null);
@@ -61,7 +63,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
         setStage('front-uploaded');
       } catch (error) {
         console.error('Error uploading Aadhar front:', error);
-        Alert.alert('Upload failed', 'Unable to upload Aadhar front. Please try again.');
+        Alert.alert(t('uploadFailed'), 'Unable to upload Aadhar front. Please try again.');
       } finally {
         setIsUploading(false);
       }
@@ -87,7 +89,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
         }
       } catch (error) {
         console.error('Error uploading Aadhar back:', error);
-        Alert.alert('Upload failed', 'Unable to upload Aadhar back. Please try again.');
+        Alert.alert(t('uploadFailed'), 'Unable to upload Aadhar back. Please try again.');
       } finally {
         setIsUploading(false);
       }
@@ -98,7 +100,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow camera access to upload a document.');
+        Alert.alert(t('permRequired'), t('cameraPermDoc'));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -117,7 +119,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow gallery access to choose a document.');
+        Alert.alert(t('permRequired'), t('galleryPermDoc'));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -136,7 +138,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow camera access to upload a document.');
+        Alert.alert(t('permRequired'), t('cameraPermDoc'));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -155,7 +157,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow gallery access to choose a document.');
+        Alert.alert(t('permRequired'), t('galleryPermDoc'));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -173,12 +175,12 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
   const handleSelectFront = () => {
     if (!isValid) return;
     Alert.alert(
-      'Upload Aadhar Front',
-      'Choose an option',
+      t('uploadAadharFront'),
+      t('chooseOption'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: handleCameraFront },
-        { text: 'Choose from Gallery', onPress: handleGalleryFront },
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('takePhoto'), onPress: handleCameraFront },
+        { text: t('chooseGallery'), onPress: handleGalleryFront },
       ],
       { cancelable: true }
     );
@@ -186,12 +188,12 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
 
   const handleSelectBack = () => {
     Alert.alert(
-      'Upload Aadhar Back',
-      'Choose an option',
+      t('uploadAadharBack'),
+      t('chooseOption'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: handleCameraBack },
-        { text: 'Choose from Gallery', onPress: handleGalleryBack },
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('takePhoto'), onPress: handleCameraBack },
+        { text: t('chooseGallery'), onPress: handleGalleryBack },
       ],
       { cancelable: true }
     );
@@ -226,8 +228,8 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
           </TouchableOpacity>
 
           {/* Heading */}
-          <Text style={styles.heading}>Enter your Aadhar details</Text>
-          <Text style={styles.subheading}>Upload your own documents for a faster process!</Text>
+          <Text style={styles.heading}>{t('aadharHeading')}</Text>
+          <Text style={styles.subheading}>{t('uploadDocSub')}</Text>
 
           <View style={styles.cardContainer}>
             {stage === 'input' || stage === 'front-uploaded' ? (
@@ -275,7 +277,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
                 (focused || aadhar.length > 0) && styles.floatingLabelFocused,
               ]}
             >
-              Enter Aadhar number
+              {t('enterAadhar')}
             </Text>
             <View style={styles.inputRow}>
               <TextInput
@@ -296,9 +298,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
           </View>
 
           {/* Auth note */}
-          <Text style={styles.authNote}>
-            By clicking 'Continue' you give authorization to verify your Aadhar card.
-          </Text>
+          <Text style={styles.authNote}>{t('aadharAuthNote')}</Text>
         </ScrollView>
 
         {/* Bottom Buttons */}
@@ -312,7 +312,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
                 disabled={!isValid || isUploading}
               >
                 <Text style={[styles.uploadText, isValid && styles.uploadTextActive]}>
-                  {isUploading ? 'Uploading Front...' : 'Upload Front'}
+                  {isUploading ? t('uploadingFront') : t('uploadFront')}
                 </Text>
               </TouchableOpacity>
 
@@ -327,7 +327,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.skipText}>Skip, I'll do it later</Text>
+                <Text style={styles.skipText}>{t('skipLater')}</Text>
               </TouchableOpacity>
             </>
           ) : stage === 'front-uploaded' ? (
@@ -339,7 +339,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
                 disabled={isUploading}
               >
                 <Text style={[styles.uploadText, styles.uploadTextActive]}>
-                  {isUploading ? 'Uploading Back...' : 'Upload Back'}
+                  {isUploading ? t('uploadingBack') : t('uploadBack')}
                 </Text>
               </TouchableOpacity>
 
@@ -354,7 +354,7 @@ export default function AadharScreen({ onBack, onUpload, onSkip }: AadharScreenP
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.skipText}>Skip, I'll do it later</Text>
+                <Text style={styles.skipText}>{t('skipLater')}</Text>
               </TouchableOpacity>
             </>
           ) : null}

@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { linkKycToUser } from '@/src/services/kycStorageService';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 interface DocumentItem {
   id: string;
@@ -38,14 +39,22 @@ const DEFAULT_DOCS: DocumentItem[] = [
 ];
 
 export default function UploadDocumentsScreen({
-  docs: initialDocs = DEFAULT_DOCS,
+  docs: initialDocs,
   onBack,
   onContinue,
   onDocumentPress,
   onSkip,
 }: UploadDocumentsScreenProps) {
   const router = useRouter();
-  const [docs, setDocs] = useState<DocumentItem[]>(initialDocs);
+  const { t } = useLanguage();
+
+  const DEFAULT_DOCS_TRANSLATED: DocumentItem[] = [
+    { id: 'selfie', label: t('docSelfie'), uploaded: false },
+    { id: 'aadhar', label: t('docAadhar'), uploaded: false },
+    { id: 'pan', label: t('docPan'), uploaded: false, optional: true },
+  ];
+
+  const [docs, setDocs] = useState<DocumentItem[]>(initialDocs ?? DEFAULT_DOCS_TRANSLATED);
   const [isLinking, setIsLinking] = useState(false);
 
   useFocusEffect(
@@ -113,10 +122,8 @@ export default function UploadDocumentsScreen({
         </TouchableOpacity>
 
         <View style={styles.content}>
-          <Text style={styles.heading}>Upload documents</Text>
-          <Text style={styles.subheading}>
-            Please submit the below documents for verification & upload originals to avoid rejection
-          </Text>
+          <Text style={styles.heading}>{t('uploadDocsHeading')}</Text>
+          <Text style={styles.subheading}>{t('uploadDocsSub')}</Text>
 
           <View style={styles.docList}>
             {docs.map((doc) => (
@@ -204,7 +211,7 @@ export default function UploadDocumentsScreen({
               <ActivityIndicator color="#fff" />
             ) : (
               <Text style={[styles.continueText, allUploaded && styles.continueTextActive]}>
-                Continue
+                {t('continueBtn')}
               </Text>
             )}
           </TouchableOpacity>
@@ -220,7 +227,7 @@ export default function UploadDocumentsScreen({
             }} 
             activeOpacity={0.7}
           >
-            <Text style={styles.skipText}>Skip, I'll do it later</Text>
+            <Text style={styles.skipText}>{t('skipLater')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

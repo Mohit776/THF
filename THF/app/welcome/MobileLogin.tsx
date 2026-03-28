@@ -19,6 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { loginWithPhonePassword, sendOtp } from '@/lib/auth';
 import { saveSession } from '@/src/services/sessionStorage';
 import { getUserProfile, getUserProfileByPhone } from '@/src/services/userService';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const { height } = Dimensions.get('window');
 
@@ -28,6 +29,7 @@ interface MobileLoginScreenProps {
 
 export default function MobileLoginScreen({ onGetStarted }: MobileLoginScreenProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const params = useLocalSearchParams<{ mode?: 'login' | 'signup' }>();
 
   const mode = params.mode === 'login' ? 'login' : 'signup';
@@ -134,14 +136,14 @@ export default function MobileLoginScreen({ onGetStarted }: MobileLoginScreenPro
         {/* Bottom Content */}
         <View style={styles.bottomSheet}>
           <Text style={styles.title}>
-            {mode === 'login' ? 'Login with mobile and password' : 'Sign up with mobile number'}
+            {mode === 'login' ? t('loginWithMobile') : t('signUpWithMobile')}
           </Text>
 
           {/* Mobile Input */}
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
-              placeholder="Enter your mobile number"
+              placeholder={t('enterMobileNumber')}
               placeholderTextColor="#b0b0b0"
               keyboardType="phone-pad"
               maxLength={10}
@@ -157,7 +159,7 @@ export default function MobileLoginScreen({ onGetStarted }: MobileLoginScreenPro
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Enter your password"
+                placeholder={t('enterPassword')}
                 placeholderTextColor="#b0b0b0"
                 secureTextEntry
                 value={password}
@@ -180,7 +182,7 @@ export default function MobileLoginScreen({ onGetStarted }: MobileLoginScreenPro
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={[styles.buttonText, canContinue ? styles.buttonTextActive : styles.buttonTextDisabled]}>
-                {mode === 'login' ? 'Login' : 'Get Started'}
+                {mode === 'login' ? t('login') : t('getStarted2')}
               </Text>
             )}
           </TouchableOpacity>
@@ -196,7 +198,7 @@ export default function MobileLoginScreen({ onGetStarted }: MobileLoginScreenPro
             style={styles.switchModeBtn}
           >
             <Text style={styles.switchModeText}>
-              {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Login'}
+              {mode === 'login' ? t('dontHaveAccount') : t('alreadyHaveAccount')}
             </Text>
           </TouchableOpacity>
         </View>

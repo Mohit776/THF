@@ -20,6 +20,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { sendOtp, verifyOtp } from '@/lib/auth';
 import { saveSession } from '@/src/services/sessionStorage';
 import { getUserProfile } from '@/src/services/userService';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const OTP_LENGTH = 6;
 const RESEND_SECONDS = 30;
@@ -47,6 +48,7 @@ const hasCompletedProfile = (profile: Awaited<ReturnType<typeof getUserProfile>>
 
 export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const params = useLocalSearchParams<{ verificationId?: string; phoneNumber?: string; mode?: 'signup' | 'login' }>();
 
   const [verificationId, setVerificationId] = useState(params.verificationId ?? '');
@@ -199,9 +201,9 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
           </TouchableOpacity>
 
           {/* Heading */}
-          <Text style={styles.heading}>Enter the 6 digit OTP</Text>
+          <Text style={styles.heading}>{t('verify')} OTP</Text>
           <Text style={styles.subheading}>
-            Enter the six digit code we have sent to{'\n'}
+            {t('otpSentTo')}{'\n'}
             <Text style={styles.phone}>{displayPhone}</Text>
           </Text>
 
@@ -231,18 +233,17 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
 
           {/* Resend */}
           <Text style={styles.resendText}>
-            {"Didn't get the OTP? "}
             {canResend ? (
               resending ? (
-                <Text style={styles.resendTimer}>Sending…</Text>
+                <Text style={styles.resendTimer}>{t('verifying')}</Text>
               ) : (
                 <Text style={styles.resendLink} onPress={handleResend}>
-                  Resend SMS
+                  {t('resendOtp')}
                 </Text>
               )
             ) : (
               <Text style={styles.resendTimer}>
-                Resend SMS in 00:{pad(timer)}
+                {t('resendIn')} 00:{pad(timer)}
               </Text>
             )}
           </Text>
@@ -273,7 +274,7 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text style={[styles.verifyText, isComplete && styles.verifyTextActive]}>
-                Verify
+                {t('verify')}
               </Text>
             )}
           </TouchableOpacity>

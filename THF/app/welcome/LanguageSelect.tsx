@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -10,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLanguage } from '@/src/hooks/useLanguage';
+import { getTranslation, type Language } from '@/src/i18n/translations';
 
 const { width, height } = Dimensions.get('window');
 
@@ -19,16 +20,24 @@ const LANGUAGES = [
   { id: 'hi', label: 'हिंदी (Hindi)' },
 ];
 
+/** Translate using the *currently selected* language (not stored profile). */
+function tFor(lang: Language, key: Parameters<typeof getTranslation>[0]) {
+  return getTranslation(key, lang);
+}
+
 interface LanguageSelectScreenProps {
   onContinue?: (selected: string) => void;
 }
 
+const LANG_CACHE_KEY = 'selected_language';
+
 export default function LanguageSelectScreen({ onContinue }: LanguageSelectScreenProps) {
   const router = useRouter();
-  const [selected, setSelected] = useState('en');
-  const { t } = useLanguage();
+  const [selected, setSelected] = useState<Language>('en');
 
-  const handleContinue = (mode: 'login' | 'signup') => {
+  const handleContinue = async (mode: 'login' | 'signup') => {
+    // Persist selected language so MobileLogin & OTP use it immediately
+    await AsyncStorage.setItem(LANG_CACHE_KEY, selected);
     if (onContinue) {
       onContinue(selected);
     } else {
@@ -56,7 +65,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
 
       {/* Bottom Sheet */}
       <View style={styles.bottomSheet}>
-        <Text style={styles.title}>{t('selectLanguageTitle')}</Text>
+        <Text style={styles.title}>{tFor(selected, 'selectLanguageTitle')}</Text>
 
         {/* Language Options */}
         <View style={styles.optionsRow}>
@@ -67,7 +76,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
                 styles.optionButton,
                 selected === lang.id && styles.optionButtonSelected,
               ]}
-              onPress={() => setSelected(lang.id)}
+              onPress={() => setSelected(lang.id as Language)}
               activeOpacity={0.8}
             >
               <Text
@@ -96,7 +105,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
           onPress={() => handleContinue('signup')}
           activeOpacity={0.85}
         >
-          <Text style={styles.continueText}>{t('signUp')}</Text>
+          <Text style={styles.continueText}>{tFor(selected, 'signUp')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -104,7 +113,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
           onPress={() => handleContinue('login')}
           activeOpacity={0.85}
         >
-          <Text style={styles.loginText}>{t('login')}</Text>
+          <Text style={styles.loginText}>{tFor(selected, 'login')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

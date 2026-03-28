@@ -18,6 +18,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const { width } = Dimensions.get('window');
 
@@ -33,6 +34,7 @@ interface PanScreenProps {
 
 export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const [pan, setPan] = useState('');
   const [focused, setFocused] = useState(false);
   const [imageUri, setImageUri] = useState<string | null>(null);
@@ -64,7 +66,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
         }
       } catch (error) {
         console.error('Error uploading PAN:', error);
-        Alert.alert('Upload failed', 'Unable to upload PAN document. Please try again.');
+        Alert.alert(t('uploadFailed'), 'Unable to upload PAN document. Please try again.');
       } finally {
         setIsUploading(false);
       }
@@ -75,7 +77,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow camera access to upload a document.');
+        Alert.alert(t('permRequired'), t('cameraPermDoc'));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -94,7 +96,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow gallery access to choose a document.');
+        Alert.alert(t('permRequired'), t('galleryPermDoc'));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -112,12 +114,12 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
   const handleSelectOptions = () => {
     if (!isValid) return;
     Alert.alert(
-      'Upload Document',
-      'Choose an option',
+      t('uploadDocument'),
+      t('chooseOption'),
       [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: handleCamera },
-        { text: 'Choose from Gallery', onPress: handleGallery },
+        { text: t('cancel'), style: 'cancel' },
+        { text: t('takePhoto'), onPress: handleCamera },
+        { text: t('chooseGallery'), onPress: handleGallery },
       ],
       { cancelable: true }
     );
@@ -152,21 +154,21 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
           </TouchableOpacity>
 
           {/* Heading */}
-          <Text style={styles.heading}>Enter your Pan details (Optional)</Text>
-          <Text style={styles.subheading}>Upload your own documents for a faster process!</Text>
+          <Text style={styles.heading}>{t('panHeading')}</Text>
+          <Text style={styles.subheading}>{t('uploadDocSub')}</Text>
 
           <View style={styles.cardContainer}>
-            {imageUri ? (
-              <Image
-                source={{ uri: imageUri }}
-                style={styles.cardImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.placeholderBox}>
-                <Text style={styles.placeholderText}>No image selected</Text>
-              </View>
-            )}
+              {imageUri ? (
+                <Image
+                  source={{ uri: imageUri }}
+                  style={styles.cardImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.placeholderBox}>
+                  <Text style={styles.placeholderText}>{t('noImageSelected')}</Text>
+                </View>
+              )}
           </View>
 
           {/* Pan Number Input */}
@@ -177,7 +179,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
                 (focused || pan.length > 0) && styles.floatingLabelFocused,
               ]}
             >
-              Enter PAN number
+              {t('enterPan')}
             </Text>
             <View style={styles.inputRow}>
               <TextInput
@@ -198,9 +200,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
           </View>
 
           {/* Auth note */}
-          <Text style={styles.authNote}>
-            By clicking 'Continue' you give authorization to verify your PAN card.
-          </Text>
+          <Text style={styles.authNote}>{t('panAuthNote')}</Text>
         </ScrollView>
 
         {/* Bottom Buttons */}
@@ -212,7 +212,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
             disabled={!isValid || isUploading}
           >
             <Text style={[styles.uploadText, isValid && styles.uploadTextActive]}>
-              {isUploading ? 'Uploading...' : 'Upload Document'}
+              {isUploading ? t('uploading') : t('uploadDocument')}
             </Text>
           </TouchableOpacity>
 
@@ -227,7 +227,7 @@ export default function PanScreen({ onBack, onUpload, onSkip }: PanScreenProps) 
             }}
             activeOpacity={0.7}
           >
-            <Text style={styles.skipText}>Skip, I'll do it later</Text>
+            <Text style={styles.skipText}>{t('skipLater')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

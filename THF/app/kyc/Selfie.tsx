@@ -15,6 +15,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLanguage } from '@/src/hooks/useLanguage';
 
 const { width } = Dimensions.get('window');
 
@@ -25,6 +26,7 @@ interface SelfieScreenProps {
 
 export default function SelfieScreen({ onBack, onProceed }: SelfieScreenProps) {
   const router = useRouter();
+  const { t } = useLanguage();
   const floatAnim = useRef(new Animated.Value(0)).current;
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -58,7 +60,7 @@ export default function SelfieScreen({ onBack, onProceed }: SelfieScreenProps) {
         }
       } catch (error) {
         console.error('Error uploading selfie:', error);
-        Alert.alert('Upload failed', 'Unable to upload selfie. Please try again.');
+        Alert.alert(t('uploadFailed'), 'Unable to upload selfie. Please try again.');
       } finally {
         setIsUploading(false);
       }
@@ -69,7 +71,7 @@ export default function SelfieScreen({ onBack, onProceed }: SelfieScreenProps) {
     try {
       const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow camera access to take a selfie.');
+        Alert.alert(t('permRequired'), t('camPermSelfie'));
         return;
       }
       const result = await ImagePicker.launchCameraAsync({
@@ -88,7 +90,7 @@ export default function SelfieScreen({ onBack, onProceed }: SelfieScreenProps) {
     try {
       const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
-        Alert.alert('Permission Required', 'Please allow gallery access to choose a photo.');
+        Alert.alert(t('permRequired'), t('galPermSelfie'));
         return;
       }
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -105,11 +107,11 @@ export default function SelfieScreen({ onBack, onProceed }: SelfieScreenProps) {
 
   const handleSelectOptions = () => {
     Alert.alert(
-      'Upload Photo',
-      'Choose an option',
-      [  { text: 'Cancel', style: 'cancel' },
-        { text: 'Take Photo', onPress: handleCamera },
-        { text: 'Choose from Gallery', onPress: handleGallery },
+      t('uploadPhoto'),
+      t('chooseOption'),
+      [  { text: t('cancel'), style: 'cancel' },
+        { text: t('takePhoto'), onPress: handleCamera },
+        { text: t('chooseGallery'), onPress: handleGallery },
       
       ],
       { cancelable: true }
@@ -137,10 +139,8 @@ export default function SelfieScreen({ onBack, onProceed }: SelfieScreenProps) {
 
       {/* Content */}
       <View style={styles.content}>
-        <Text style={styles.heading}>Let's click a selfie</Text>
-        <Text style={styles.subheading}>
-          Please remove spectacles, hat and mask. A clearly visible face will get approved faster.
-        </Text>
+        <Text style={styles.heading}>{t('selfieHeading')}</Text>
+        <Text style={styles.subheading}>{t('selfieSub')}</Text>
 
         {/* ── Replace source with your image import ── */}
         <View style={[styles.illustrationWrapper]}>
@@ -169,7 +169,7 @@ export default function SelfieScreen({ onBack, onProceed }: SelfieScreenProps) {
           disabled={isUploading}
         >
           <Text style={styles.proceedText}>
-            {isUploading ? 'Uploading...' : 'Proceed to Capture'}
+            {isUploading ? t('uploading') : t('proceedCapture')}
           </Text>
         </TouchableOpacity>
       </View>
