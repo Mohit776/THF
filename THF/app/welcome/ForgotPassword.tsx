@@ -188,9 +188,9 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   backArrow: {
-    fontSize: 36,
+    fontSize: 24,
     color: '#3b5bdb',
-    fontWeight: '800',
+    fontWeight: '500',
   },
 
   /* Title */

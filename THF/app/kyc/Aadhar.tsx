@@ -391,7 +391,11 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 12 },
 
   backBtn: { paddingTop: 16, paddingBottom: 4, alignSelf: 'flex-start' },
-  backArrow: { fontSize: 22, color: '#3b5bdb', fontWeight: '500' },
+  backArrow: {
+    fontSize: 24,
+    color: '#3b5bdb',
+    fontWeight: '500',
+  },
 
   heading: { fontSize: 22, fontWeight: '700', color: '#111', marginBottom: 6, marginTop: 8 },
   subheading: { fontSize: 13, color: '#888', lineHeight: 20, marginBottom: 20 },

@@ -266,8 +266,8 @@ const styles = StyleSheet.create({
   },
   backArrow: {
     fontSize: 24,
-    color: '#E8304A',
-    fontWeight: '700',
+    color: '#3b5bdb',
+    fontWeight: '500',
   },
 
   /* ── Bottom Sheet ── */

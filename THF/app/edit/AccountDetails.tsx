@@ -230,7 +230,11 @@ const styles = StyleSheet.create({
   scrollContent: { paddingHorizontal: 20, paddingBottom: 40 },
 
   backBtn: { paddingTop: 16, paddingBottom: 4, alignSelf: 'flex-start' },
-  backArrow: { fontSize: 22, color: '#3b5bdb', fontWeight: '500' },
+  backArrow: {
+    fontSize: 24,
+    color: '#3b5bdb',
+    fontWeight: '500',
+  },
 
   sectionHeading: { fontSize: 18, fontWeight: '700', color: '#111', marginTop: 12, marginBottom: 16 },
 

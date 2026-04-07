@@ -232,9 +232,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   backArrow: {
-    fontSize: 22,
-    color: '#2563EB',
-    fontWeight: '600',
+    fontSize: 24,
+    color: '#3b5bdb',
+    fontWeight: '500',
   },
   title: {
     fontSize: 26,

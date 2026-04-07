@@ -295,7 +295,11 @@ const styles = StyleSheet.create({
 
   /* Back */
   backBtn: { marginBottom: 24, marginTop: 12, alignSelf: 'flex-start' },
-  backArrow: { fontSize: 36, color: '#3b5bdb', fontWeight: '800' },
+  backArrow: {
+    fontSize: 24,
+    color: '#3b5bdb',
+    fontWeight: '500',
+  },
 
   /* Heading */
   heading: {

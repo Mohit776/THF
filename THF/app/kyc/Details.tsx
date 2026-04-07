@@ -350,7 +350,11 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#fff' },
   flex: { flex: 1 },
   backBtn: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4, alignSelf: 'flex-start' },
-  backArrow: { fontSize: 22, color: '#3b5bdb', fontWeight: '500' },
+  backArrow: {
+    fontSize: 24,
+    color: '#3b5bdb',
+    fontWeight: '500',
+  },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 20, paddingBottom: 8 },
   heading: { fontSize: 24, fontWeight: '700', color: '#111', marginBottom: 8, lineHeight: 32 },

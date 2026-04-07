@@ -158,7 +158,11 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingTop: 12 },
 
   backBtn: { paddingTop: 4, paddingBottom: 4, alignSelf: 'flex-start' },
-  backArrow: { fontSize: 22, color: '#3b5bdb', fontWeight: '500' },
+  backArrow: {
+    fontSize: 24,
+    color: '#3b5bdb',
+    fontWeight: '500',
+  },
 
   heading: { fontSize: 24, fontWeight: '700', color: '#111', marginTop: 12, marginBottom: 24 },
 
