@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "The Famous Halwai Partners",
+    "name": "TFH Partner",
     "slug": "thefamoushalwaipartners",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/app_assets/TFH-icon.png",
+    "icon": "./assets/app_assets/icon.png",
     "splash": {
-      "image": "./assets/app_assets/TFH-splash.png",
+      "image": "./assets/app_assets/splashscreen.png",
       "resizeMode": "contain",
       "backgroundColor": "#EA243F"
     },
@@ -15,8 +15,8 @@
     "android": {
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
-        "backgroundColor": "#EA243F",
-        "foregroundImage": "./assets/app_assets/TFH-adaptive-icon.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/app_assets/Adaptive.png"
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.thfpartner.myapp",
@@ -44,8 +44,8 @@
       [
         "expo-notifications",
         {
-          "icon": "./assets/app_assets/Union.png",
-          "color": "#E8304A",
+          "icon": "assets/app_assets/Maskgroup.png",
+          "color": "#ffffff",
           "sounds": []
         }
       ],
@@ -59,7 +59,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "4a587d21-58fd-402f-9dcf-fc4018c345f2"
+        "projectId": "e25745ee-b3e0-4d4b-b3cd-d17eef70776f"
       }
     },
     "owner": "mohit551"

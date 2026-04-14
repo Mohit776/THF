@@ -27,6 +27,7 @@ export interface Booking {
   /** Date/time of the event */
   date: FirebaseFirestoreTypes.Timestamp;
   location: string;
+  address?: string;
   guests: number;
   /** Booking fee in INR */
   amount: number;

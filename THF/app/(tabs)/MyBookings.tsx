@@ -33,6 +33,7 @@ interface Booking {
   time: string;
   guests: number;
   location: string;
+  address?: string;
   amount: number;
   status: BookingStatus;
 }
@@ -43,6 +44,7 @@ interface NextUpBooking {
   title: string;
   time: string;
   locationNote: string;
+  address?: string;
   guests: number;
   cuisine: string;
   phone?: string;
@@ -177,7 +179,9 @@ export default function MyBookingsScreen() {
 
   // Map Firestore bookings to the local display Booking shape
   const mappedBookings: Booking[] = fsBookings.map((b) => {
-    const dateObj = (b.date as any).toDate ? (b.date as any).toDate() : new Date(b.date as any);
+    const dateObj = b.date
+      ? ((b.date as any).toDate ? (b.date as any).toDate() : new Date(b.date as any))
+      : new Date();
     const d = dayjs(dateObj);
     const now = dayjs();
     let status: BookingStatus = 'Upcoming';
@@ -192,6 +196,7 @@ export default function MyBookingsScreen() {
       time: d.format('h:mm A'),
       guests: b.guests,
       location: b.location,
+      address: b.address,
       amount: b.amount,
       status,
     };
@@ -206,6 +211,7 @@ export default function MyBookingsScreen() {
         title: nextUpBooking.title,
         time: nextUpBooking.time,
         locationNote: nextUpBooking.location,
+        address: nextUpBooking.address,
         guests: nextUpBooking.guests,
         cuisine: fsBookings.find(b => b.bookingId === nextUpBooking.id)?.eventType ?? '',
         phone: fsBookings.find(b => b.bookingId === nextUpBooking.id)?.phone,
@@ -251,8 +257,9 @@ export default function MyBookingsScreen() {
                  style={[styles.navBtn, { flex: 1 }]} 
                  activeOpacity={0.8}
                  onPress={() => {
-                   if (nextUp.locationNote && nextUp.locationNote !== 'not assigned') {
-                     Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(nextUp.locationNote)}`);
+                   const targetAddress = nextUp.address ? `${nextUp.address}, ${nextUp.locationNote}` : nextUp.locationNote;
+                   if (targetAddress && targetAddress !== 'not assigned') {
+                     Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(targetAddress)}`);
                    }
                  }}
                >

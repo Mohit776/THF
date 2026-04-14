@@ -2,6 +2,7 @@ import { onAuthChange } from '@/lib/auth';
 import { auth } from '@/src/services/firebaseConfig';
 import { clearSession, getSession } from '@/src/services/sessionStorage';
 import { getUserProfile } from '@/src/services/userService';
+import { hasCompletedProfile } from '@/src/utils/profileUtils';
 import { useRouter } from 'expo-router';
 import type { FirebaseAuthTypes } from '@react-native-firebase/auth';
 import React, { useEffect, useRef } from 'react';
@@ -68,10 +69,9 @@ export default function SplashScreen() {
         }
 
         const profile = await getUserProfile(user.uid);
-        // If a profile document exists in Firestore, the user has already
-        // gone through onboarding — send them straight to the Dashboard.
-        // Only redirect to the KYC flow when there is NO profile at all.
-        if (profile) {
+        // Only route to Dashboard when ALL mandatory onboarding fields are filled.
+        // Otherwise send the user back into the KYC flow.
+        if (hasCompletedProfile(profile)) {
           router.replace('/(tabs)/Dashboard');
         } else {
           router.replace('/kyc/Experience');

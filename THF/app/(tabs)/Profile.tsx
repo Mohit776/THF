@@ -216,9 +216,9 @@ export default function ProfileScreen() {
 
         {/* ── Menu Items ── */}
         <View style={styles.menuSection}>
-          <MenuRow label={t('accountDetail')} onPress={() => router.push('/edit/AccountDetails')} />
+          <MenuRow label={t('accountDetail')} onPress={() => router.push('/edit/EditDetails')} />
           <View style={styles.menuDivider} />
-          <MenuRow label={t('bankDetails')} onPress={() => router.push('/edit/EditDetails')} />
+          <MenuRow label={t('bankDetails')} onPress={() => router.push('/edit/AccountDetails')} />
           <View style={styles.menuDivider} />
           <MenuRow label={t('referFriend')} badge={t('referBadge')} onPress={() => router.push('/edit/ReferFriend')} />
           <View style={styles.menuDivider} />

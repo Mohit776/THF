@@ -42,9 +42,9 @@ export async function createBookingForChef(
       .where("fcmToken", "!=", "")
       .get();
 
-    const allTokens = chefsSnap.docs
+    const allTokens = Array.from(new Set(chefsSnap.docs
       .map((doc) => doc.data().fcmToken as string)
-      .filter(Boolean);
+      .filter(Boolean)));
 
     if (allTokens.length > 0) {
       await sendPushNotification(

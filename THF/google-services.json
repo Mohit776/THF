@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "632168932860",
+    "project_id": "tfh-partner-app",
+    "storage_bucket": "tfh-partner-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:632168932860:android:4fdbfd531e961b95417e79",
+        "android_client_info": {
+          "package_name": "com.thfpartner.myapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "632168932860-oham8hjsmp4o753ihf6t5a5n04a1akvb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thfpartner.myapp",
+            "certificate_hash": "207f20bb77fed6ca9eb61bcc4a9126c7e01a4020"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyARaozx4Pum4IKrO6FruKCfKSKzHfAZzGM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

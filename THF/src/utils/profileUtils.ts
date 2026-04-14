@@ -4,11 +4,12 @@
  * Single source of truth for profile completion checks.
  * Replaces the 3 inconsistent local definitions in MobileLogin, OTP, and password screens.
  *
- * Decision: We match the index.tsx approach — if a profile document exists at all
- * in Firestore, the user has already gone through onboarding.
- * The strict field-by-field check was causing routing loops because not every
- * onboarding path fills all fields (e.g. email, emergencyPhone can be empty
- * if the user skipped certain steps).
+ * We check that all mandatory fields from the KYC onboarding flow are filled.
+ * This prevents the user from landing on the Dashboard if they signed up
+ * (e.g. via OTP) but closed the app before completing all required steps.
+ *
+ * Mandatory fields: name, gender, city, address, experience (non-empty array).
+ * Optional fields (email, emergencyPhone, zone) are NOT required for completion.
  */
 
 import type { UserProfile } from '@/src/services/userService';
@@ -18,9 +19,20 @@ import type { UserProfile } from '@/src/services/userService';
  * completed the initial onboarding flow and should land on the Dashboard.
  *
  * A `null` profile means the user has never started onboarding.
+ * A partial profile (missing mandatory fields) means they started but
+ * haven't finished — they should be sent back to the KYC flow.
  */
 export function hasCompletedProfile(
   profile: UserProfile | null | undefined,
 ): boolean {
-  return profile !== null && profile !== undefined;
+  if (!profile) return false;
+
+  // All mandatory fields must be filled
+  const hasName = typeof profile.name === 'string' && profile.name.trim().length > 0;
+  const hasGender = typeof profile.gender === 'string' && profile.gender.trim().length > 0;
+  const hasCity = typeof profile.city === 'string' && profile.city.trim().length > 0;
+  const hasAddress = typeof profile.address === 'string' && profile.address.trim().length > 0;
+  const hasExperience = Array.isArray(profile.experience) && profile.experience.length > 0;
+
+  return hasName && hasGender && hasCity && hasAddress && hasExperience;
 }

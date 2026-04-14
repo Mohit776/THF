@@ -40,6 +40,7 @@ interface Booking {
   occasion: string;
   guests: number;
   location: string;
+  address?: string;
   phone?: string;
 }
 
@@ -166,7 +167,7 @@ function BroadcastedBookingCard({
   onIgnore: () => void;
   t: (key: any) => string;
 }) {
-  const bTime = dayjs((booking.date as any).toDate?.() ?? booking.date);
+  const bTime = booking.date ? dayjs((booking.date as any).toDate?.() ?? booking.date) : dayjs(null);
   const slideAnim = React.useRef(new Animated.Value(100)).current; // slide up from 100px
 
   React.useEffect(() => {
@@ -276,17 +277,6 @@ export default function DashboardScreen() {
     if (!auth.currentUser?.uid) return;
 
     const unsubscribe = listenToBroadcastedBookings((bBookings) => {
-      // Send local notification if new bookings appeared
-      if (bBookings.length > prevBroadcastCount.current && prevBroadcastCount.current >= 0) {
-        const newest = bBookings[0];
-        if (newest && prevBroadcastCount.current > 0) {
-          sendLocalNotification(
-            '🍳 New Booking Available!',
-            `${newest.clientName} - ${newest.eventType} - ${newest.guests} guests`,
-            { type: 'broadcast_booking' },
-          );
-        }
-      }
       prevBroadcastCount.current = bBookings.length;
       setBroadcastedBookings(bBookings);
     });
@@ -494,6 +484,7 @@ export default function DashboardScreen() {
                 occasion: booking.eventType,
                 guests: booking.guests,
                 location: booking.location,
+                address: booking.address,
                 phone: booking.phone,
               }}
               showActions={index === 0}
@@ -508,6 +499,7 @@ export default function DashboardScreen() {
                   occasion: booking.eventType,
                   guests: booking.guests,
                   location: booking.location,
+                  address: booking.address,
                   phone: booking.phone,
                 });
               }}
@@ -519,8 +511,9 @@ export default function DashboardScreen() {
                 }
               }}
               onLocation={() => {
-                if (booking.location) {
-                  Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(booking.location)}`);
+                const targetAddress = booking.address ? `${booking.address}, ${booking.location}` : booking.location;
+                if (targetAddress) {
+                  Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(targetAddress)}`);
                 }
               }}
             />
@@ -568,8 +561,9 @@ export default function DashboardScreen() {
                 style={modalStyles.actionButtonBlue}
                 activeOpacity={0.8}
                 onPress={() => {
-                  if (selectedBooking?.location) {
-                    Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(selectedBooking.location)}`);
+                  const targetAddress = selectedBooking?.address ? `${selectedBooking.address}, ${selectedBooking.location}` : selectedBooking?.location;
+                  if (targetAddress) {
+                    Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(targetAddress)}`);
                   }
                 }}
               >
