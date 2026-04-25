@@ -10,8 +10,8 @@ export default function Sidebar() {
     { name: "Dashboard", href: "/dashboard" },
     { name: "Chefs", href: "/chefs", badge: "1200" },
     { name: "Bookings", href: "/bookings", badge: "2k" },
-    { name: "Documents", href: "/documents" },
     { name: "Onboard Chef", href: "/onboard-chef" },
+    { name: "Payments", href: "/payments" },
     { name: "Settings", href: "/settings" },
   ];
 

@@ -86,13 +86,25 @@ interface MemberStats {
   activeTotal: number;
 }
 
+export interface RecentBooking {
+  id: string;
+  clientName: string;
+  chefName: string;
+  eventType: string;
+  dateTime: string;
+  amount: number;
+  status: string;
+}
+
 export interface DashboardAnalytics {
   totalRevenue: number;
   activeChefs: number;
   totalChefs: number;
+  totalBookings: number;
   avgBookingValue: number;
   pendingApproval: number;
   monthlyBookings: MonthlyBooking[];
+  weeklyBookings: MonthlyBooking[];  // last 7 days, revenue per day
   peakMonth: string;
   avgPerMonth: number;
   ytdTotal: number;
@@ -100,6 +112,7 @@ export interface DashboardAnalytics {
   locationBreakdown: BreakdownItem[];
   memberStats: MemberStats;
   recentActivity: ActivityItem[];
+  recentBookings: RecentBooking[];
 }
 
 function timeAgo(date: Date): string {
@@ -122,10 +135,21 @@ export async function getDashboardAnalytics(): Promise<{
   error?: string;
 }> {
   try {
-    // ── Fetch users ──
-    const usersSnap = await adminDb.collection("users").get();
-    const allUsers = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
+    // ── Fetch users + bookings in parallel ──
+    const [usersSnap, bookingsSnap] = await Promise.all([
+      adminDb.collection("users").get(),
+      adminDb.collection("bookings").get(),
+    ]);
 
+    // Build name lookup: doc.id → display name  (same pattern as bookings.ts)
+    const nameMap: Record<string, string> = {};
+    for (const doc of usersSnap.docs) {
+      const d = doc.data();
+      nameMap[doc.id] = d.name || d.displayName || d.email || "Unknown";
+    }
+
+    const allUsers = usersSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
+    const allBookings = bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
     const totalChefs = allUsers.length;
     const activeChefs = allUsers.filter(
       (u) => u.kycStatus === "approved" || u.kycStatus === "verified"
@@ -143,30 +167,51 @@ export async function getDashboardAnalytics(): Promise<{
       return created && created >= startOfMonth;
     }).length;
 
-    // ── Fetch bookings ──
-    const bookingsSnap = await adminDb.collection("bookings").get();
-    const allBookings = bookingsSnap.docs.map((d) => ({ id: d.id, ...d.data() })) as any[];
-
     let totalRevenue = 0;
-    const monthCounts: Record<number, number> = {};
+    const monthRevenue: Record<number, number> = {};  // month index → total ₹
+    const monthCounts: Record<number, number> = {};   // month index → booking count
     const cuisineCounts: Record<string, number> = {};
     const locationCounts: Record<string, number> = {};
 
-    for (const b of allBookings) {
-      // Revenue
-      const amount = Number(b.amount) || 0;
-      totalRevenue += amount;
+    // Weekly: bucket last 7 calendar days (today inclusive)
+    const DAY_ABBR = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    // Build ordered array: oldest day first → newest day (today)
+    const weekDays: { label: string; dateStr: string }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      weekDays.push({
+        label: DAY_ABBR[d.getDay()],
+        dateStr: d.toISOString().slice(0, 10), // YYYY-MM-DD
+      });
+    }
+    const weekRevenue: Record<string, number> = {};
+    weekDays.forEach((wd) => { weekRevenue[wd.dateStr] = 0; });
 
-      // Monthly
+    for (const b of allBookings) {
+      // Parse booking date
       let bDate: Date | null = null;
       if (b.createdAt?.toDate) bDate = b.createdAt.toDate();
       else if (b.createdAt) bDate = new Date(b.createdAt);
       if (b.date?.toDate) bDate = b.date.toDate();
       else if (b.date && !bDate) bDate = new Date(b.date);
 
-      if (bDate && bDate.getFullYear() === now.getFullYear()) {
-        const m = bDate.getMonth();
-        monthCounts[m] = (monthCounts[m] || 0) + 1;
+      const amount = Number(b.amount) || 0;
+      totalRevenue += amount;
+
+      if (bDate) {
+        // Monthly (current year)
+        if (bDate.getFullYear() === now.getFullYear()) {
+          const m = bDate.getMonth();
+          monthRevenue[m] = (monthRevenue[m] || 0) + amount;
+          monthCounts[m] = (monthCounts[m] || 0) + 1;
+        }
+
+        // Weekly (last 7 days)
+        const dateKey = bDate.toISOString().slice(0, 10);
+        if (dateKey in weekRevenue) {
+          weekRevenue[dateKey] += amount;
+        }
       }
 
       // Cuisine / Event type
@@ -180,10 +225,16 @@ export async function getDashboardAnalytics(): Promise<{
 
     const avgBookingValue = allBookings.length > 0 ? Math.round(totalRevenue / allBookings.length) : 0;
 
-    // Build monthly array (current year)
+    // Build monthly array (current year) — use revenue ₹ as value
     const monthlyBookings: MonthlyBooking[] = MONTH_LABELS.map((label, idx) => ({
       label,
-      value: monthCounts[idx] || 0,
+      value: monthRevenue[idx] || 0,
+    }));
+
+    // Build weekly array — last 7 days revenue
+    const weeklyBookings: MonthlyBooking[] = weekDays.map((wd) => ({
+      label: wd.label,
+      value: weekRevenue[wd.dateStr] || 0,
     }));
 
     const ytdTotal = monthlyBookings.reduce((s, m) => s + m.value, 0);
@@ -195,20 +246,48 @@ export async function getDashboardAnalytics(): Promise<{
     const cuisineBreakdown = buildBreakdown(cuisineCounts, allBookings.length);
     const locationBreakdown = buildBreakdown(locationCounts, allBookings.length);
 
-    // ── Recent activity (derived from bookings + users) ──
-    const recentActivity: ActivityItem[] = [];
-
-    // Recent bookings as activity
+    // ── Recent bookings structured for the table ──
     const sortedBookings = [...allBookings]
       .map((b) => {
         let d: Date | null = null;
         if (b.createdAt?.toDate) d = b.createdAt.toDate();
         else if (b.createdAt) d = new Date(b.createdAt);
+        if (b.date?.toDate) d = b.date.toDate();
+        else if (b.date && !d) d = new Date(b.date);
         return { ...b, _date: d };
       })
       .filter((b) => b._date)
       .sort((a, b) => b._date!.getTime() - a._date!.getTime())
-      .slice(0, 5);
+      .slice(0, 6);
+
+    // Create a map of doc IDs to names for quick lookup (doc.id = Firestore UID)
+    // Resolve chef: partnerId is the primary field written by createBookingForChef
+
+    const recentBookings: RecentBooking[] = sortedBookings.map((b) => {
+      const d = b._date as Date;
+      const dateStr = d.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" });
+      const timeStr = d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true });
+
+      // Mirror exactly what bookings.ts does — partnerId is the key field
+      const resolvedChefName =
+        nameMap[b.partnerId] ||
+        nameMap[b.chefId] ||
+        b.chefName ||
+        "—";
+
+      return {
+        id: b.bookingId || b.id?.slice(0, 8).toUpperCase() || "TFH00000",
+        clientName: b.clientName || b.userName || b.customerName || "—",
+        chefName: resolvedChefName,
+        eventType: b.eventType || b.occasion || b.cuisineType || "—",
+        dateTime: `${dateStr}\n${timeStr}`,
+        amount: Number(b.amount) || 0,
+        status: b.status || "pending",
+      };
+    });
+
+    // ── Recent activity (derived from bookings + users) ──
+    const recentActivity: ActivityItem[] = [];
 
     for (const b of sortedBookings) {
       recentActivity.push({
@@ -255,9 +334,11 @@ export async function getDashboardAnalytics(): Promise<{
         totalRevenue,
         activeChefs,
         totalChefs,
+        totalBookings: allBookings.length,
         avgBookingValue,
         pendingApproval,
         monthlyBookings,
+        weeklyBookings,
         peakMonth: peakEntry.label,
         avgPerMonth,
         ytdTotal,
@@ -270,6 +351,7 @@ export async function getDashboardAnalytics(): Promise<{
           activeTotal: activeChefs,
         },
         recentActivity: recentActivity.slice(0, 7),
+        recentBookings,
       },
     };
   } catch (error: any) {

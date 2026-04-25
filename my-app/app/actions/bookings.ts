@@ -17,8 +17,10 @@ export interface BookingRow {
   rawAmount: number;
   status: string;
   address: string;
+  location: string;
   requirements: string;
   zone: string;
+  rawDate: number;
 }
 
 export interface BookingStats {
@@ -34,11 +36,11 @@ export interface BookingsData {
   bookings: BookingRow[];
 }
 
-function formatDate(raw: any): { date: string; time: string } {
+function formatDate(raw: any): { date: string; time: string; timestamp: number } {
   let d: Date | null = null;
   if (raw?.toDate) d = raw.toDate();
   else if (raw) d = new Date(raw);
-  if (!d || isNaN(d.getTime())) return { date: "—", time: "—" };
+  if (!d || isNaN(d.getTime())) return { date: "—", time: "—", timestamp: 0 };
   const date = d.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -49,7 +51,7 @@ function formatDate(raw: any): { date: string; time: string } {
     minute: "2-digit",
     hour12: true,
   });
-  return { date, time };
+  return { date, time, timestamp: d.getTime() };
 }
 
 function normaliseStatus(raw: string = ""): string {
@@ -103,7 +105,7 @@ export async function getBookingsData(): Promise<{
         b.userName ||
         "Unknown Client";
 
-      const { date, time } = formatDate(b.date ?? b.createdAt);
+      const { date, time, timestamp } = formatDate(b.date ?? b.createdAt);
       const amountValue = Number(b.amount) || 0;
       const amount = amountValue ? `₹${amountValue.toLocaleString("en-IN")}` : "—";
 
@@ -120,9 +122,11 @@ export async function getBookingsData(): Promise<{
         amount,
         rawAmount: amountValue,
         status,
-        address: b.address || b.location || "",
+        address: b.address || "",
+        location: b.location || "",
         requirements: b.requirements || "",
         zone: b.zone || "",
+        rawDate: timestamp,
       });
     }
 
@@ -189,7 +193,7 @@ export async function getChefBookings(chefId: string): Promise<{ success: boolea
       const chefName = nameMap[b.partnerId] || nameMap[b.chefId] || b.chefName || "Unknown Chef";
       const client = nameMap[b.clientId] || b.clientName || b.userName || "Unknown Client";
 
-      const { date, time } = formatDate(b.date ?? b.createdAt);
+      const { date, time, timestamp } = formatDate(b.date ?? b.createdAt);
       const amountValue = Number(b.amount) || 0;
       const amount = amountValue ? `₹${amountValue.toLocaleString("en-IN")}` : "—";
 
@@ -206,9 +210,11 @@ export async function getChefBookings(chefId: string): Promise<{ success: boolea
         amount,
         rawAmount: amountValue,
         status,
-        address: b.address || b.location || "",
+        address: b.address || "",
+        location: b.location || "",
         requirements: b.requirements || "",
         zone: b.zone || "",
+        rawDate: timestamp,
       });
     }
 

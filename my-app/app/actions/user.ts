@@ -57,3 +57,39 @@ export async function updateKycStatus(uid: string, status: "approved" | "rejecte
     };
   }
 }
+
+export interface UserProfileData {
+  phone?: string;
+  email?: string;
+  emergencyPhone?: string;
+  gender?: string;
+  jobType?: string;
+  cuisines?: string[];      // stored as an array in Firestore
+  workExperience?: string | string[];
+  city?: string;
+  zone?: string;
+  address?: string;
+  bankAccount?: string;
+  ifscCode?: string;
+  bankNumber?: string;
+  upiId?: string;
+  aadharNumber?: string;
+  panNumber?: string;
+}
+
+export async function updateUserProfile(uid: string, data: UserProfileData) {
+  try {
+    const payload: Record<string, any> = {};
+    (Object.keys(data) as (keyof UserProfileData)[]).forEach((key) => {
+      if (data[key] !== undefined) payload[key] = data[key];
+    });
+    payload.updatedAt = new Date().toISOString();
+
+    await adminDb.collection("users").doc(uid).update(payload);
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error updating user profile:", error);
+    return { success: false, error: error.message || "Failed to update profile" };
+  }
+}
+

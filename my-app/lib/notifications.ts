@@ -11,7 +11,8 @@ export async function sendPushNotification(
   tokens: string[],
   title: string,
   body: string,
-  data?: Record<string, unknown>
+  data?: Record<string, unknown>,
+  imageUrl?: string
 ) {
   if (!tokens || tokens.length === 0) {
     return { success: false, error: "No tokens provided" };
@@ -32,10 +33,23 @@ export async function sendPushNotification(
     }
   }
 
-  const message = {
+  // Also include imageUrl in data so the app can use it for foreground notifications
+  if (imageUrl) {
+    stringifiedData.imageUrl = imageUrl;
+  }
+
+  const message: admin.messaging.MulticastMessage = {
     notification: {
       title,
       body,
+      imageUrl: imageUrl || undefined,
+    },
+    // Android-specific: ensures image shows in system tray notifications
+    android: {
+      notification: {
+        imageUrl: imageUrl || undefined,
+        channelId: "default",
+      },
     },
     data: stringifiedData,
     tokens: validTokens,

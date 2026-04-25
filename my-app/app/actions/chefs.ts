@@ -1,6 +1,6 @@
 "use server";
 
-import { adminDb } from "@/lib/firebase-admin";
+import admin, { adminDb, getAdminDb } from "@/lib/firebase-admin";
 
 export interface ChefRow {
   uid: string;
@@ -130,5 +130,73 @@ export async function getChefsList(
   } catch (error: any) {
     console.error("Error fetching chefs list:", error);
     return { success: false, error: error.message || "Failed to fetch chefs." };
+  }
+}
+
+async function uploadFile(file: File) {
+  const bucket = admin.storage().bucket("tfh-partner-app.firebasestorage.app");
+  const fileName = `kycdocuments/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  const fileRef = bucket.file(fileName);
+  
+  const arrayBuffer = await file.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
+
+  await fileRef.save(buffer, {
+    metadata: {
+      contentType: file.type,
+      cacheControl: "public, max-age=31536000",
+    },
+  });
+  await fileRef.makePublic();
+  return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+}
+
+export async function onboardChef(formData: FormData) {
+  try {
+    getAdminDb(); // initialize admin
+    
+    // extract string fields
+    const payload: any = {
+       name: formData.get("fullName"),
+       phone: formData.get("mobile"),
+       emergencyContact: formData.get("emergencyContact"),
+       email: formData.get("email") || "",
+       gender: formData.get("gender"),
+       experience: formData.get("experience"),
+       city: formData.get("city"),
+       zone: formData.get("zone"),
+       address: formData.get("address"),
+       bio: formData.get("bio"),
+       aadharNumber: formData.get("aadhar"),
+       panNumber: formData.get("pan"),
+       bankAccount: formData.get("bankAccount"),
+       ifsc: formData.get("ifsc"),
+       bankName: formData.get("bankName"),
+       createdAt: new Date().toISOString(),
+       role: "partner", // Assuming partner
+       kycStatus: "pending_verification",
+       status: "Pending",
+    };
+
+    // upload Aadhar
+    const aadharFile = formData.get("aadharFile") as File | null;
+    if (aadharFile && aadharFile.size > 0) {
+      payload.aadharUrl = await uploadFile(aadharFile);
+    }
+    
+    // upload PAN
+    const panFile = formData.get("panFile") as File | null;
+    if (panFile && panFile.size > 0) {
+      payload.panUrl = await uploadFile(panFile);
+    }
+
+    const docRef = await adminDb.collection("users").add(payload);
+    // update document with its own ID (common pattern)
+    await docRef.update({ id: docRef.id });
+
+    return { success: true, id: docRef.id };
+  } catch (err: any) {
+    console.error("Error onboarding chef:", err);
+    return { success: false, error: err.message };
   }
 }

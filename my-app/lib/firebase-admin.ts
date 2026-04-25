@@ -14,6 +14,7 @@ function ensureInitialized() {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
+        storageBucket: "tfh-partner-app.firebasestorage.app",
       });
     } else {
       // Local development: use the service account JSON file in the project root
@@ -21,6 +22,7 @@ function ensureInitialized() {
       const serviceAccount = require("../tfh-partner-app-firebase-adminsdk-fbsvc-238c3dff75.json");
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
+        storageBucket: "tfh-partner-app.firebasestorage.app",
       });
     }
   }

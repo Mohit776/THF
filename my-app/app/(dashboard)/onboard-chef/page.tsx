@@ -2,17 +2,33 @@
 
 import { ChevronDown, Upload } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { onboardChef } from "@/app/actions/chefs";
 
 export default function OnboardChefPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [aadharFileName, setAadharFileName] = useState<string | null>(null);
+  const [panFileName, setPanFileName] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    
+    try {
+      const formData = new FormData(e.currentTarget);
+      const res = await onboardChef(formData);
+      if (res.success) {
+        alert("Chef registered successfully!");
+        router.push("/chefs");
+      } else {
+        alert("Error registering chef: " + res.error);
+      }
+    } catch (error: any) {
+      alert("Error: " + error.message);
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -24,7 +40,7 @@ export default function OnboardChefPage() {
         <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] overflow-hidden">
           <div className="px-8 py-6">
             <h2 className="text-[18px] font-semibold text-[#1F2937] mb-6">Chef Registration Form</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Row 1 */}
               <div>
@@ -128,7 +144,7 @@ export default function OnboardChefPage() {
         <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] overflow-hidden">
           <div className="px-8 py-6">
             <h2 className="text-[18px] font-semibold text-[#1F2937] mb-6">Banking & Compliance</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Row 1 */}
               <div>
@@ -180,22 +196,40 @@ export default function OnboardChefPage() {
 
             {/* Upload Documents Section */}
             <h3 className="text-[17px] font-semibold text-[#1F2937] mt-8 mb-5">Upload documents</h3>
-            
+
             <div className="space-y-4">
               {/* Aadhar Upload */}
-              <div className="flex items-center justify-between border border-[#E5E7EB] rounded-lg px-4 py-2">
-                <span className="text-[15px] text-gray-500">Upload Aadhar Card</span>
-                <button type="button" className="px-4 py-1.5 border border-[#E5E7EB] rounded-md text-[13px] font-medium text-[#1F2937] hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between border border-[#E5E7EB] rounded-lg px-4 py-2 relative">
+                <span className="text-[15px] text-gray-500 truncate max-w-[200px]">
+                  {aadharFileName || "Upload Aadhar Card"}
+                </span>
+                <button type="button" className="px-4 py-1.5 border border-[#E5E7EB] rounded-md text-[13px] font-medium text-[#1F2937] hover:bg-gray-50 transition-colors pointer-events-none">
                   Upload
                 </button>
+                <input 
+                  type="file" 
+                  name="aadharFile"
+                  accept="image/*,application/pdf"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={(e) => setAadharFileName(e.target.files?.[0]?.name || null)}
+                />
               </div>
 
               {/* PAN Upload */}
-              <div className="flex items-center justify-between border border-[#E5E7EB] rounded-lg px-4 py-2">
-                <span className="text-[15px] text-gray-500">PAN card</span>
-                <button type="button" className="px-4 py-1.5 border border-[#E5E7EB] rounded-md text-[13px] font-medium text-[#1F2937] hover:bg-gray-50 transition-colors">
+              <div className="flex items-center justify-between border border-[#E5E7EB] rounded-lg px-4 py-2 relative">
+                <span className="text-[15px] text-gray-500 truncate max-w-[200px]">
+                  {panFileName || "Upload PAN Card"}
+                </span>
+                <button type="button" className="px-4 py-1.5 border border-[#E5E7EB] rounded-md text-[13px] font-medium text-[#1F2937] hover:bg-gray-50 transition-colors pointer-events-none">
                   Upload
                 </button>
+                <input 
+                  type="file" 
+                  name="panFile"
+                  accept="image/*,application/pdf"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  onChange={(e) => setPanFileName(e.target.files?.[0]?.name || null)}
+                />
               </div>
             </div>
 
@@ -204,15 +238,16 @@ export default function OnboardChefPage() {
               <button
                 type="button"
                 className="w-full py-3.5 bg-white border border-[#E5E7EB] hover:bg-gray-50 text-[#E11D48] rounded-lg font-medium text-[15px] transition-colors"
+                onClick={() => router.back()}
               >
-                Save Draft
+                Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="w-full py-3.5 bg-[#E11D48] hover:bg-[#BE123C] text-white rounded-lg font-medium text-[15px] transition-colors disabled:opacity-50"
               >
-                {loading ? "Processing..." : "Create Booking"}
+                {loading ? "Processing..." : "Register Chef"}
               </button>
             </div>
           </div>
