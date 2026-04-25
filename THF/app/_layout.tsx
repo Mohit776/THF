@@ -58,12 +58,18 @@ export default function RootLayout() {
       }
     );
 
-    // When user taps a notification, navigate to Dashboard
+    // Issue #13: Route to specific booking when bookingId is in the notification payload
     responseListener.current = Notifications.addNotificationResponseReceivedListener(
       (response) => {
-        const data = response.notification.request.content.data;
+        const data = response.notification.request.content.data as Record<string, any>;
         console.log('[layout] Notification tapped, data:', data);
-        router.push("/(tabs)/Dashboard");
+        if (data?.bookingId) {
+          // Navigate to the specific booking detail screen
+          router.push(`/(tabs)/bookings/${data.bookingId}` as any);
+        } else {
+          // Fallback: go to Dashboard if no booking context
+          router.push("/(tabs)/Dashboard");
+        }
       }
     );
 

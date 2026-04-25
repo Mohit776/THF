@@ -40,6 +40,15 @@ const ZONES = ['North zone', 'South zone', 'East zone', 'West zone', 'Central zo
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 const isValidPhone = (p: string) => /^[0-9]{10}$/.test(p);
 
+/**
+ * Issue #4: Normalize zone string before writing to Firestore.
+ * The mobile dropdown shows "North zone" etc., but Firestore (and admin panel)
+ * expects canonical lowercase single-word values: "north", "south", etc.
+ */
+function normalizeZoneForStorage(displayZone: string): string {
+  return displayZone.toLowerCase().replace(/\s*zone\s*/i, '').trim();
+}
+
 // ── Floating Input ──────────────────────────────────────────────────────────
 interface FloatingInputProps {
   label: string;
@@ -242,7 +251,8 @@ export default function DetailsScreen({ onBack, onRegister }: DetailsScreenProps
         emergencyPhone: emergency.trim(),
         gender: gender.toLowerCase() as 'male' | 'female' | 'other',
         city,
-        zone,
+        // Issue #4: normalize zone before saving — "North zone" → "north"
+        zone: normalizeZoneForStorage(zone),
         address: address.trim(),
         language: 'en',
       };

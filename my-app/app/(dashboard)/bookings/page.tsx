@@ -20,6 +20,13 @@ const STATUS_CONFIG: Record<
     border: "border-t-blue-500",
     subtext: "Live right now",
   },
+  // Issue #1: Broadcasted is distinct from Scheduled — no chef has accepted yet
+  Broadcasted: {
+    pill: "bg-purple-50 text-purple-600 border-purple-100",
+    tab: "border-t-purple-500",
+    border: "border-t-purple-500",
+    subtext: "Awaiting chef",
+  },
   Scheduled: {
     pill: "bg-amber-50 text-amber-600 border-amber-100",
     tab: "border-t-amber-500",
@@ -51,7 +58,7 @@ export default async function BookingsPage(props: {
 
   // ── Fetch data (chef-filtered or all) ────────────────
   let bookings: any[] = [];
-  let stats = { completed: 0, inProgress: 0, scheduled: 0, cancelled: 0, total: 0 };
+  let stats = { completed: 0, inProgress: 0, scheduled: 0, broadcasted: 0, cancelled: 0, total: 0 };
   let fetchError: string | null = null;
   let chefName: string | null = null;
 
@@ -64,10 +71,11 @@ export default async function BookingsPage(props: {
       chefName = bookings[0]?.chefName ?? null;
       for (const b of bookings) {
         stats.total++;
-        if (b.status === "Completed")   stats.completed++;
-        else if (b.status === "In progress") stats.inProgress++;
-        else if (b.status === "Scheduled")   stats.scheduled++;
-        else if (b.status === "Cancelled")   stats.cancelled++;
+        if (b.status === "Completed")      stats.completed++;
+        else if (b.status === "In progress")   stats.inProgress++;
+        else if (b.status === "Broadcasted")   stats.broadcasted++; // FIX #1
+        else if (b.status === "Scheduled")     stats.scheduled++;
+        else if (b.status === "Cancelled")     stats.cancelled++;
       }
     }
   } else {
@@ -94,10 +102,15 @@ export default async function BookingsPage(props: {
   }
 
   if (qFilter) {
-    bookings = bookings.filter(b => 
-      (b.client?.toLowerCase() || "").includes(qFilter) ||
-      (b.chefName?.toLowerCase() || "").includes(qFilter) ||
-      (b.id?.toLowerCase() || "").includes(qFilter) 
+    // Issue #15: expanded search to cover location, zone, address, and event type
+    bookings = bookings.filter(b =>
+      (b.client?.toLowerCase()    || "").includes(qFilter) ||
+      (b.chefName?.toLowerCase()  || "").includes(qFilter) ||
+      (b.id?.toLowerCase()        || "").includes(qFilter) ||
+      (b.location?.toLowerCase()  || "").includes(qFilter) ||
+      (b.zone?.toLowerCase()      || "").includes(qFilter) ||
+      (b.address?.toLowerCase()   || "").includes(qFilter) ||
+      (b.eventType?.toLowerCase() || "").includes(qFilter)
     );
   }
 
@@ -137,6 +150,13 @@ export default async function BookingsPage(props: {
       subtext: STATUS_CONFIG["In progress"].subtext,
       borderColor: "border-t-blue-500",
     },
+    // Issue #1: Broadcasted now has its own stat card
+    {
+      title: "Broadcasted",
+      value: stats.broadcasted.toLocaleString(),
+      subtext: STATUS_CONFIG["Broadcasted"].subtext,
+      borderColor: "border-t-purple-500",
+    },
     {
       title: "Scheduled",
       value: stats.scheduled.toLocaleString(),
@@ -155,6 +175,7 @@ export default async function BookingsPage(props: {
     { label: "All Bookings", count: stats.total },
     { label: "Completed", count: stats.completed },
     { label: "In progress", count: stats.inProgress },
+    { label: "Broadcasted", count: stats.broadcasted }, // FIX #1
     { label: "Scheduled", count: stats.scheduled },
     { label: "Cancelled", count: stats.cancelled },
   ];
@@ -174,8 +195,8 @@ export default async function BookingsPage(props: {
           </Link>
         </div>
       )}
-      {/* Metric Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+      {/* Metric Cards — 5 columns now that Broadcasted is its own bucket */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 mb-6">
         {cards.map((card, idx) => (
           <div
             key={idx}
