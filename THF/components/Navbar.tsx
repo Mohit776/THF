@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Linking, Alert } from 'react-native';
 import { Image } from 'expo-image';
 import { CustomText as Text } from './CustomText';
 
@@ -8,12 +8,35 @@ interface NavbarProps {
 }
 
 export default function Navbar({ onHelp }: NavbarProps) {
+  const handleHelp = async () => {
+    if (onHelp) {
+      onHelp();
+      return;
+    }
+
+    const phoneNumber = '8926262675';
+    const whatsappUrl = `whatsapp://send?phone=+91${phoneNumber}&text=Hello, I need help with THF Partner App.`;
+    const fallbackUrl = `https://wa.me/91${phoneNumber}`;
+
+    try {
+      const supported = await Linking.canOpenURL(whatsappUrl);
+      if (supported) {
+        await Linking.openURL(whatsappUrl);
+      } else {
+        await Linking.openURL(fallbackUrl);
+      }
+    } catch (error) {
+      console.error('Error opening WhatsApp:', error);
+      Alert.alert('Error', 'Could not open WhatsApp. Please make sure it is installed.');
+    }
+  };
+
   return (
     <View style={styles.navbar}>
       <Image source={require('../assets/THF/tfh-logo.svg')} style={{ width: 100.5, height: 36 }} />
-      <TouchableOpacity style={styles.helpBtn} onPress={onHelp} activeOpacity={0.8}>
-      <Text style={styles.helpIcon}>📞</Text>
-      <Text style={styles.helpText}>Help</Text>
+      <TouchableOpacity style={styles.helpBtn} onPress={handleHelp} activeOpacity={0.8}>
+        <Text style={styles.helpIcon}>📞</Text>
+        <Text style={styles.helpText}>Help</Text>
       </TouchableOpacity>
     </View>
   );

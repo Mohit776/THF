@@ -55,7 +55,8 @@ export default function ResetPasswordScreen() {
       Alert.alert(t('error'), t('phoneMissing'));
       return;
     }
-    if (!verificationId || !otpCode) {
+    if ((!verificationId || !otpCode) && !auth.currentUser) {
+      // No OTP credentials AND no signed-in user — can't proceed
       Alert.alert(t('error'), 'Session expired. Please request a new OTP.');
       return;
     }

@@ -18,27 +18,125 @@ import * as SecureStore from 'expo-secure-store';
 // ─── OTP helpers ─────────────────────────────────────────────────────────────
 
 /**
+ * Callback type for auto-verification events (Android same-device).
+ * When Firebase auto-verifies the OTP (SMS on same device), the user is
+ * signed in automatically and this callback fires with the user object.
+ */
+export type AutoVerifyCallback = (user: FirebaseAuthTypes.User) => void;
+
+/**
  * Send an OTP to the given phone number using the native Firebase SDK.
- * Uses @react-native-firebase/auth which handles SafetyNet/Play Integrity automatically.
+ * Uses `verifyPhoneNumber` instead of `signInWithPhoneNumber` to properly
+ * handle Android auto-verification (same device receives SMS).
+ *
  * @param phoneNumber – E.164 format, e.g. "+919205394233"
+ * @param onAutoVerified – optional callback fired if Android auto-verifies
+ * @param forceResend – set true when resending OTP
  * @returns verificationId
  */
-export async function sendOtp(phoneNumber: string): Promise<string> {
-  const confirmation = await auth.signInWithPhoneNumber(phoneNumber);
-  if (!confirmation.verificationId) {
-    throw new Error('Failed to get verification ID. Please try again.');
-  }
-  return confirmation.verificationId;
+export async function sendOtp(
+  phoneNumber: string,
+  onAutoVerified?: AutoVerifyCallback,
+  forceResend?: boolean,
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    auth
+      .verifyPhoneNumber(phoneNumber, forceResend)
+      .on('state_changed', async (phoneAuthSnapshot) => {
+        switch (phoneAuthSnapshot.state) {
+          // ── Step 1: Code sent via SMS ──
+          case firebase.auth.PhoneAuthState.CODE_SENT:
+            console.log('[OTP] Code sent, verificationId:', phoneAuthSnapshot.verificationId);
+            resolve(phoneAuthSnapshot.verificationId);
+            break;
+
+          // ── Step 2: Android auto-verified (same device) ──
+          case firebase.auth.PhoneAuthState.AUTO_VERIFIED:
+            console.log('[OTP] Auto-verified on same device');
+            try {
+              // Build credential from the auto-verified snapshot
+              const credential = firebase.auth.PhoneAuthProvider.credential(
+                phoneAuthSnapshot.verificationId,
+                phoneAuthSnapshot.code || '',
+              );
+              const result = await auth.signInWithCredential(credential);
+              if (onAutoVerified) {
+                onAutoVerified(result.user);
+              }
+              // Still resolve with verificationId so the UI has it
+              resolve(phoneAuthSnapshot.verificationId);
+            } catch (err) {
+              console.error('[OTP] Auto-verify sign-in failed:', err);
+              // Still resolve — user can manually enter OTP
+              resolve(phoneAuthSnapshot.verificationId);
+            }
+            break;
+
+          // ── Auto-verify timed out ──
+          case firebase.auth.PhoneAuthState.AUTO_VERIFY_TIMEOUT:
+            console.log('[OTP] Auto-verify timeout, user must enter OTP manually');
+            resolve(phoneAuthSnapshot.verificationId);
+            break;
+
+          // ── Error ──
+          case firebase.auth.PhoneAuthState.ERROR:
+            console.error('[OTP] Phone auth error:', phoneAuthSnapshot.error);
+            reject(
+              phoneAuthSnapshot.error ||
+              new Error('Phone verification failed. Please try again.'),
+            );
+            break;
+
+          default:
+            break;
+        }
+      });
+  });
 }
 
 /**
  * Verify the 6-digit OTP and sign in with Firebase Phone Auth.
- * Uses only the Native SDK — no more Web SDK syncing needed.
+ *
+ * @param verificationId – from sendOtp
+ * @param otp – 6-digit code
+ * @param expectedPhoneNumber – optional, to ensure we don't return a wrong existing session
  */
-export async function verifyOtp(verificationId: string, otp: string) {
-  const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
-  const result = await auth.signInWithCredential(credential);
-  return result.user;
+export async function verifyOtp(verificationId: string, otp: string, expectedPhoneNumber?: string) {
+  // If the user is already signed in (auto-verified), check if it's the right one
+  const currentUser = auth.currentUser;
+  if (currentUser && currentUser.phoneNumber) {
+    // If we have an expected number, make sure it matches (ignoring +91 or formatting)
+    if (expectedPhoneNumber) {
+      const current = normalizePhone(currentUser.phoneNumber);
+      const expected = normalizePhone(expectedPhoneNumber);
+      if (current === expected) {
+        console.log('[OTP] User matches expected phone via auto-verification:', currentUser.uid);
+        return currentUser;
+      }
+    } else {
+      console.log('[OTP] User already signed in via auto-verification:', currentUser.uid);
+      return currentUser;
+    }
+  }
+
+  try {
+    const credential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
+    const result = await auth.signInWithCredential(credential);
+    return result.user;
+  } catch (error: any) {
+    // If it says session-expired, check one last time if we are signed in now
+    // (Sometimes the auth state updates exactly during the failure)
+    if (error.code === 'auth/session-expired') {
+      const retryUser = auth.currentUser;
+      if (retryUser && retryUser.phoneNumber) {
+        if (!expectedPhoneNumber || normalizePhone(retryUser.phoneNumber) === normalizePhone(expectedPhoneNumber)) {
+          console.log('[OTP] Session expired but user is now signed in:', retryUser.uid);
+          return retryUser;
+        }
+      }
+    }
+    throw error;
+  }
 }
 
 // ─── Auth state ───────────────────────────────────────────────────────────────
@@ -87,13 +185,18 @@ export async function resetPasswordWithOtp(
   verificationId: string,
   otp: string,
 ): Promise<void> {
-  // Re-authenticate current user with the phone credential so Firebase
-  // considers this a "recent" sign-in, allowing password changes.
-  const phoneCredential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
   const user = auth.currentUser;
   if (!user) throw new Error('No authenticated user found. Please try again.');
 
-  await user.reauthenticateWithCredential(phoneCredential);
+  // If we have both verificationId and otp, re-authenticate to prove a recent
+  // sign-in. But when OTP is empty (auto-verified on same device), the user was
+  // just signed in via phone credential — skip re-auth.
+  if (verificationId && otp) {
+    const phoneCredential = firebase.auth.PhoneAuthProvider.credential(verificationId, otp);
+    await user.reauthenticateWithCredential(phoneCredential);
+  } else {
+    console.log('[resetPasswordWithOtp] Skipping reauthentication — user was auto-verified');
+  }
 
   // Now update or link the email/password provider.
   const email = getHiddenEmail(phoneNumber);

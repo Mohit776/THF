@@ -49,16 +49,36 @@ export default function ForgotPasswordScreen() {
         return;
       }
 
-      const verificationId = await sendOtp(phoneNumber);
+      // Track if auto-verification happened (Android same device)
+      let autoVerifyHandled = false;
 
-      router.push({
-        pathname: '/welcome/OTP',
-        params: {
-          verificationId,
-          phoneNumber,
-          mode: 'forgot_password',
+      const verificationId = await sendOtp(
+        phoneNumber,
+        async (autoVerifiedUser) => {
+          // Android auto-verified the OTP on same device!
+          autoVerifyHandled = true;
+          console.log('[ForgotPassword] Auto-verified, skipping OTP screen');
+          router.replace({
+            pathname: '/welcome/ResetPassword',
+            params: {
+              phoneNumber,
+              mode: 'forgot_password',
+            },
+          });
         },
-      });
+      );
+
+      // Only navigate to OTP screen if auto-verification didn't handle it
+      if (!autoVerifyHandled) {
+        router.push({
+          pathname: '/welcome/OTP',
+          params: {
+            verificationId,
+            phoneNumber,
+            mode: 'forgot_password',
+          },
+        });
+      }
     } catch (error: any) {
       console.error('Forgot password OTP error:', error);
       Alert.alert(

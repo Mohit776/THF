@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Dimensions, KeyboardAvoidingView, Platform, StatusBar, StyleSheet, TextInput, TouchableOpacity, View,  } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { loginWithPhonePassword, sendOtp } from '@/lib/auth';
+import { loginWithPhonePassword, sendOtp, onAuthChange } from '@/lib/auth';
 import { saveSession } from '@/src/services/sessionStorage';
 import { getUserProfile, getUserProfileByPhone } from '@/src/services/userService';
 import { hasCompletedProfile } from '@/src/utils/profileUtils';
@@ -55,16 +55,38 @@ export default function MobileLoginScreen({ onGetStarted }: MobileLoginScreenPro
           setStep('password');
         } else {
           // No profile -> Proceed to OTP for signup
-          const verificationId = await sendOtp(phoneNumber);
+          // Track if auto-verification happened (Android same device)
+          let autoVerifyHandled = false;
 
-          router.push({
-            pathname: '/welcome/OTP',
-            params: {
-              verificationId,
-              phoneNumber,
-              mode: 'signup',
+          const verificationId = await sendOtp(
+            phoneNumber,
+            async (autoVerifiedUser) => {
+              // Android auto-verified the OTP on same device!
+              // User is already signed in — go directly to password setup
+              autoVerifyHandled = true;
+              console.log('[MobileLogin] Auto-verified, skipping OTP screen');
+              await saveSession({ uid: autoVerifiedUser.uid, phoneNumber });
+              router.replace({
+                pathname: '/welcome/password',
+                params: {
+                  phoneNumber,
+                  mode: 'signup',
+                },
+              });
             },
-          });
+          );
+
+          // Only navigate to OTP screen if auto-verification didn't handle it
+          if (!autoVerifyHandled) {
+            router.push({
+              pathname: '/welcome/OTP',
+              params: {
+                verificationId,
+                phoneNumber,
+                mode: 'signup',
+              },
+            });
+          }
         }
       } else {
         // Step is password -> perform login

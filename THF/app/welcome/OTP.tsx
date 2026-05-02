@@ -1,10 +1,11 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, KeyboardAvoidingView, NativeSyntheticEvent, Platform, StatusBar, StyleSheet, TextInput, TextInputKeyPressEventData, TouchableOpacity, View,  } from 'react-native';
 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { sendOtp, verifyOtp } from '@/lib/auth';
+import { sendOtp, verifyOtp, onAuthChange } from '@/lib/auth';
+import type { AutoVerifyCallback } from '@/lib/auth';
 import { saveSession } from '@/src/services/sessionStorage';
 import { getUserProfile } from '@/src/services/userService';
 import { hasCompletedProfile } from '@/src/utils/profileUtils';
@@ -38,8 +39,60 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const [autoVerified, setAutoVerified] = useState(false);
 
   const inputRefs = useRef<(TextInput | null)[]>([]);
+  const hasNavigated = useRef(false);
+
+  /* ── Navigate after successful verification ── */
+  const navigateAfterVerify = useCallback(async (user: { uid: string; phoneNumber?: string | null }) => {
+    if (hasNavigated.current) return;
+    hasNavigated.current = true;
+
+    await saveSession({ uid: user.uid, phoneNumber });
+    console.log('Firebase user signed in:', user.uid);
+
+    if (mode === 'signup' || mode === 'forgot_password') {
+      const nextScreen = mode === 'forgot_password' ? '/welcome/ResetPassword' : '/welcome/password';
+      router.replace({
+        pathname: nextScreen,
+        params: {
+          phoneNumber,
+          mode,
+          verificationId,
+          otp: otp.join(''),
+        },
+      });
+      return;
+    }
+
+    const existingProfile = await getUserProfile(user.uid);
+    if (hasCompletedProfile(existingProfile)) router.replace('/(tabs)/Dashboard');
+    else router.replace('/kyc/Experience');
+  }, [mode, phoneNumber, verificationId, otp, router]);
+
+  /* ── Handle auto-verification (Android same device) ── */
+  useEffect(() => {
+    // Listen for auth state changes — auto-verification will sign the user in
+    const unsubscribe = onAuthChange(async (user) => {
+      // If user is detected and has a phone number, navigate immediately.
+      // We removed !loading because if auto-verify happens WHILE we are 
+      // manually verifying, we still want to proceed.
+      if (user && user.phoneNumber && !hasNavigated.current) {
+        console.log('[OTP Screen] Auto-verified user detected:', user.uid);
+        setAutoVerified(true);
+        setLoading(true); // Ensure loading state is on for navigation
+        try {
+          await navigateAfterVerify(user);
+        } catch (err) {
+          console.error('[OTP Screen] Auto-verify navigation error:', err);
+          setLoading(false);
+          hasNavigated.current = false;
+        }
+      }
+    });
+    return () => unsubscribe();
+  }, [navigateAfterVerify]);
 
   // Countdown timer
   useEffect(() => {
@@ -53,8 +106,14 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
     if (!canResend) return;
 
     setResending(true);
+    hasNavigated.current = false;
+    setAutoVerified(false);
     try {
-      const newVerificationId = await sendOtp(phoneNumber);
+      const newVerificationId = await sendOtp(
+        phoneNumber,
+        undefined, // auto-verify handled by onAuthChange listener above
+        true,      // forceResend
+      );
       setVerificationId(newVerificationId);
       setOtp(Array(OTP_LENGTH).fill(''));
       setFocusedIndex(0);
@@ -94,6 +153,9 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
   const handleVerify = async () => {
     if (!isComplete) return;
 
+    // If already auto-verified and navigated, do nothing
+    if (autoVerified || hasNavigated.current) return;
+
     const otpCode = otp.join('');
 
     if (onVerify) {
@@ -108,29 +170,9 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
 
     setLoading(true);
     try {
-      const user = await verifyOtp(verificationId, otpCode);
-      await saveSession({ uid: user.uid, phoneNumber });
-      console.log('Firebase user signed in:', user.uid);
-
-      // If it's a new signup or forgot password
-      if (mode === 'signup' || mode === 'forgot_password') {
-        const nextScreen = mode === 'forgot_password' ? '/welcome/ResetPassword' : '/welcome/password';
-        router.replace({
-          pathname: nextScreen,
-          params: {
-            phoneNumber,
-            mode,
-            verificationId,
-            otp: otpCode,
-          },
-        });
-        return;
-      }
-
-      // Safety fallback (should not hit with current flow).
-      const existingProfile = await getUserProfile(user.uid);
-      if (hasCompletedProfile(existingProfile)) router.replace('/(tabs)/Dashboard');
-      else router.replace('/kyc/Experience');
+      // Pass phoneNumber to ensure we match the right auto-verified user if one exists
+      const user = await verifyOtp(verificationId, otpCode, phoneNumber);
+      await navigateAfterVerify(user);
     } catch (error: any) {
       console.error('OTP verify error:', error);
 
