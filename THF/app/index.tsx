@@ -108,7 +108,7 @@ export default function SplashScreen() {
       {/* Hero Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={require('../assets/THF/top - Copy.svg')}
+          source={require('../assets/THF/top-hero.png')}
           style={styles.heroImage}
           contentFit="cover"
         />

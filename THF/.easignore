@@ -32,7 +32,10 @@ walkthrough.md
 # Test & lint config
 eslint.config.js
 
-# Secrets — should be set via EAS Secrets, not uploaded
+# Credentials & secrets — should be set via EAS Secrets, not uploaded
+credentials/
+credentials.json
+sha_output.txt
 .env
 .env.*
 functions/.env

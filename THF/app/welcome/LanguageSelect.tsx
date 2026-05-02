@@ -46,7 +46,7 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
       {/* Hero Image */}
       <View style={styles.imageContainer}>
         <Image
-          source={require('../../assets/THF/lanuage_start.svg')} // Replace with your actual image path
+          source={require('../../assets/THF/language-start.png')}
           style={styles.heroImage}
           contentFit="cover"
         />
