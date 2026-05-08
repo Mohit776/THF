@@ -1,6 +1,7 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { useNavigation } from '@react-navigation/native';
 import React, { useState, useEffect, useRef } from 'react';
-import { View, TouchableOpacity, StyleSheet, StatusBar, Alert } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, StatusBar, Alert, BackHandler } from 'react-native';
 import Navbar from '@/components/Navbar';
 import { updateBookingStatus } from '@/src/services/bookingService';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -21,19 +22,28 @@ interface JobDetails {
   location: string;
   guests: number;
   cuisine: string;
+  occasion?: string;
 }
+
+// ─── Job Row ──────────────────────────────────────────────────────────────────
+const JobRow = ({ label, value }: { label: string; value: string | number }) => (
+  <View style={styles.jobRow}>
+    <Text style={styles.jobRowLabel}>{label}: </Text>
+    <Text style={styles.jobRowValue}>{value}</Text>
+  </View>
+);
 
 // ─── Job Card ─────────────────────────────────────────────────────────────────
 const JobCard = ({ job, t }: { job: JobDetails; t: (key: TranslationKey) => string }) => (
   <View style={styles.jobCard}>
-    <Text style={styles.currentJobLabel}>{t('currentJob')}</Text>
+    <Text style={styles.currentJobLabel}>Current job</Text>
     <Text style={styles.jobTitle}>{job.title}</Text>
     <View style={styles.jobMeta}>
-      <Text style={styles.jobMetaText}>⏰  {t('timePrefix')} {job.time}</Text>
-      <Text style={styles.jobMetaText}>📍  {t('locationPrefix')} {job.location}</Text>
-      <Text style={styles.jobMetaText}>
-        👥  {job.guests} {t('guestsLabel')}  |  {job.cuisine}
-      </Text>
+      <JobRow label="Occasion" value={job.occasion || "Celebration"} />
+      <JobRow label="Time" value={job.time} />
+      <JobRow label="Location" value={job.location} />
+      <JobRow label="No. of People" value={`${job.guests} guests`} />
+      <JobRow label="Cuisine Type" value={job.cuisine} />
     </View>
   </View>
 );
@@ -86,6 +96,7 @@ export default function JobTimerScreen() {
     location?: string;
     guests?: string;
     cuisine?: string;
+    occasion?: string;
   }>();
 
   const JOB: JobDetails = {
@@ -94,9 +105,34 @@ export default function JobTimerScreen() {
     location: params.location || 'N/A',
     guests: parseInt(params.guests || '0', 10),
     cuisine: params.cuisine || 'N/A',
+    occasion: params.occasion || 'Celebration',
   };
 
   const { bookingId } = params;
+
+  const navigation = useNavigation();
+
+  // Disable back navigation
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        // Return true to stop default back behavior
+        return true;
+      };
+
+      const backSub = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+      navigation.setOptions({
+        gestureEnabled: false,
+      });
+
+      return () => {
+        backSub.remove();
+        navigation.setOptions({
+          gestureEnabled: true,
+        });
+      };
+    }, [navigation])
+  );
   const router = useRouter();
 
   // ── Timer state (UI display) ──
@@ -169,9 +205,11 @@ export default function JobTimerScreen() {
         location: JOB.location,
         guests: String(JOB.guests),
         cuisine: JOB.cuisine,
+        occasion: JOB.occasion,
       });
     }
   };
+
 
   const handlePause = async () => {
     // Accumulate elapsed up to this moment before pausing
@@ -288,7 +326,7 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#F5F5F5' },
   screen: { flex: 1, backgroundColor: '#F5F5F5' },
   jobCard: {
-    backgroundColor: '#EAEAEA',
+    backgroundColor: '#ebedf0',
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
@@ -303,15 +341,17 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   jobTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '800',
-    color: TEXT,
-    lineHeight: 26,
-    marginBottom: 10,
-    letterSpacing: -0.3,
+    color: '#212529',
+    lineHeight: 28,
+    marginBottom: 8,
+    letterSpacing: -0.5,
   },
-  jobMeta: { gap: 3 },
-  jobMetaText: { fontSize: 13, color: '#444', lineHeight: 20 },
+  jobMeta: { gap: 4 },
+  jobRow: { flexDirection: 'row', alignItems: 'center' },
+  jobRowLabel: { fontSize: 14, color: '#6c757d', fontWeight: '500' },
+  jobRowValue: { fontSize: 14, color: '#343a40', fontWeight: '700' },
   timerArea: {
     alignItems: 'center',
     justifyContent: 'center',

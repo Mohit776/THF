@@ -22,6 +22,7 @@ export interface TimerJobParams {
   location: string;
   guests: string;
   cuisine: string;
+  occasion?: string;
 }
 
 /** Persist timer state to AsyncStorage (keyed per bookingId). */

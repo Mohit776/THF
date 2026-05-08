@@ -48,6 +48,9 @@ const CITY_OPTIONS = [
   'Udaipur',
   'Varanasi',
   'Rajkot',
+  'Haridwar',
+  'Rishikesh',
+  'Mussoorie',
 
 ];
 
@@ -65,20 +68,22 @@ function EditableField({
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   return (
-    <div>
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
-      <div className="flex items-center border-b border-gray-200 pb-1.5 focus-within:border-[#E11D48] transition-colors group">
+    <div className="relative border border-gray-200 rounded-xl px-4 py-2.5 focus-within:border-[#E11D48] transition-all group">
+      <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] text-gray-400 font-medium">
+        {label}
+      </label>
+      <div className="flex items-center">
         <input
           ref={inputRef}
           type={type}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="flex-1 text-[14px] text-gray-800 font-medium bg-transparent outline-none placeholder:text-gray-300"
+          className="flex-1 text-[15px] text-gray-800 font-medium bg-transparent outline-none placeholder:text-gray-300"
           placeholder={`Enter ${label.toLowerCase()}`}
         />
         <button type="button" tabIndex={-1} onClick={() => inputRef.current?.focus()}
           className="ml-2 opacity-30 group-focus-within:opacity-0 hover:opacity-60 transition-opacity">
-          <Pencil className="w-3.5 h-3.5 text-gray-500" />
+          <img src="/edit.svg" alt="edit" className="w-3.5 h-3.5" color="black" />
         </button>
       </div>
     </div>
@@ -94,11 +99,13 @@ function EditableSelect({
   label: string; value: string; options: string[]; onChange: (v: string) => void;
 }) {
   return (
-    <div>
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
-      <div className="flex items-center border-b border-gray-200 pb-1.5 focus-within:border-[#E11D48] transition-colors">
+    <div className="relative border border-gray-200 rounded-xl px-4 py-2.5 focus-within:border-[#E11D48] transition-all">
+      <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] text-gray-400 font-medium">
+        {label}
+      </label>
+      <div className="flex items-center">
         <select value={value} onChange={(e) => onChange(e.target.value)}
-          className="flex-1 text-[14px] text-gray-800 font-medium bg-transparent outline-none appearance-none cursor-pointer">
+          className="flex-1 text-[15px] text-gray-800 font-medium bg-transparent outline-none appearance-none cursor-pointer">
           <option value="">— Select —</option>
           {options.map((o) => <option key={o} value={o}>{o}</option>)}
         </select>
@@ -142,17 +149,21 @@ function MultiSelectDropdown({
 
   return (
     <div className="relative" ref={ref}>
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between border-b border-gray-200 pb-1.5 hover:border-[#E11D48] transition-colors"
-      >
-        <span className={`text-[14px] font-medium truncate text-left ${selected.length === 0 ? "text-gray-300" : "text-gray-800"}`}>
-          {displayText}
-        </span>
-        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
-      </button>
+      <div className="relative border border-gray-200 rounded-xl px-4 py-2.5 hover:border-[#E11D48] transition-all">
+        <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] text-gray-400 font-medium">
+          {label}
+        </label>
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="w-full flex items-center justify-between"
+        >
+          <span className={`text-[15px] font-medium truncate text-left ${selected.length === 0 ? "text-gray-300" : "text-gray-800"}`}>
+            {displayText}
+          </span>
+          <ChevronDown className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        </button>
+      </div>
 
       {open && (
         <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
@@ -187,14 +198,16 @@ function MultiSelectDropdown({
 // ─────────────────────────────────────────────────────────────────────────────
 function EditableTextarea({ label, value, onChange }: { label: string; value: string; onChange: (v: string) => void }) {
   return (
-    <div className="col-span-3">
-      <p className="text-[11px] text-gray-400 mb-1">{label}</p>
+    <div className="col-span-3 relative border border-gray-200 rounded-xl px-4 py-2.5 focus-within:border-[#E11D48] transition-all">
+      <label className="absolute -top-2 left-3 bg-white px-1.5 text-[11px] text-gray-400 font-medium">
+        {label}
+      </label>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={3}
         placeholder="Enter address…"
-        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] text-gray-800 outline-none resize-none focus:border-[#E11D48] transition-colors"
+        className="w-full text-[15px] text-gray-800 font-medium bg-transparent outline-none resize-none placeholder:text-gray-300 mt-1"
       />
     </div>
   );
@@ -265,7 +278,7 @@ export default function ChefDetailClient({ user, bookings }: Props) {
     if (lower === "south") return "South Zone";
     if (lower === "east") return "East Zone";
     if (lower === "west") return "West Zone";
-    if (lower === "central") return "Central Zone";
+
     return ZONE_OPTIONS.find(opt => opt.toLowerCase() === lower) || z;
   };
 
@@ -428,7 +441,7 @@ export default function ChefDetailClient({ user, bookings }: Props) {
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-[16px] font-bold text-gray-900">Chef detail</h2>
-            <Link href={`/bookings/${user.uid}`} className="text-[13px] font-semibold text-[#E11D48] hover:text-red-700">Booking detail</Link>
+            <Link href={`/bookings/${user.uid}`} className="text-[13px] border-1 border-gray-300 rounded-lg px-2 py-1 font-semibold text-[#E11D48] hover:text-red-700">Booking detail</Link>
           </div>
 
           <div className="grid grid-cols-3 gap-x-8 gap-y-6">

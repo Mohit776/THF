@@ -204,11 +204,12 @@ const styles = StyleSheet.create({
 
   /* Heading */
   heading: {
-    fontSize: 24,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '600',
     color: '#111',
     marginBottom: 10,
-    lineHeight: 32,
+    lineHeight: 24,
+    marginTop: 15,
   },
   subheading: {
     fontSize: 13,

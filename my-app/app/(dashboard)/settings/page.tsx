@@ -198,7 +198,7 @@ export default function SettingsPage() {
             >
               {sendState === "sending" ? (
                  <span className="flex items-center justify-center gap-2"><Loader2 className="w-4 h-4 animate-spin"/> Sending...</span>
-              ) : "Preview"}
+              ) : "Broadcast"}
             </button>
             
             <div className="min-h-[24px]">

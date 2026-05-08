@@ -2,13 +2,13 @@
   "expo": {
     "name": "TFH Partner",
     "slug": "thefamoushalwaipartners",
-    "version": "1.3",
+    "version": "1.5",
     "orientation": "portrait",
     "icon": "./assets/app_assets/icon.png",
     "splash": {
-      "image": "./assets/app_assets/ss.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#EA243F"
+      "image": "./assets/app_assets/TFH-splash-2.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#E9EDF2"
     },
     "scheme": "thf",
     "userInterfaceStyle": "automatic",

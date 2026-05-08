@@ -6,7 +6,7 @@
  */
 
 import React, { useRef, useState } from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { View, TextInput, StyleSheet, Dimensions } from 'react-native';
 
 interface OtpInputBoxesProps {
   /** Number of digits (default 6) */
@@ -96,22 +96,27 @@ export default function OtpInputBoxes({
   );
 }
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const GAP = 8;
+const MAX_BOX_WIDTH = 46;
+
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 10,
+    gap: GAP,
     marginVertical: 20,
+    width: '100%',
   },
   box: {
-    width: 46,
+    width: Math.min(MAX_BOX_WIDTH, (SCREEN_WIDTH - 100) / 6),
     height: 52,
     borderWidth: 1.5,
     borderColor: '#D9D9D9',
-    borderRadius: 10,
+    borderRadius: 12,
     textAlign: 'center',
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#222',
     backgroundColor: '#FAFAFA',
   },

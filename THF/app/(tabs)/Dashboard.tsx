@@ -6,8 +6,8 @@ import dayjs from 'dayjs';
 import { Image } from 'expo-image';
 import { useRouter, useFocusEffect } from 'expo-router';
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { ActivityIndicator, Dimensions, ScrollView, StatusBar, StyleSheet, RefreshControl, TouchableOpacity, View, Linking, Alert, Modal, Animated, BackHandler,  } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Dimensions, ScrollView, StatusBar, StyleSheet, RefreshControl, TouchableOpacity, View, Linking, Alert, Modal, Animated, BackHandler } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 import Navbar from '../../components/Navbar';
@@ -28,6 +28,7 @@ interface Booking {
   location: string;
   address?: string;
   phone?: string;
+  cuisine?: string;
 }
 
 interface DashboardScreenProps {
@@ -347,16 +348,18 @@ export default function DashboardScreen() {
   }, 0);
 
 
+  const insets = useSafeAreaInsets();
+
   if (profileLoading && !profile) {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', paddingTop: insets.top }]}>
         <ActivityIndicator color="#E8304A" size="large" />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <Navbar />
       <ScrollView
@@ -455,11 +458,11 @@ export default function DashboardScreen() {
           <ActivityIndicator color="#E8304A" style={{ marginTop: 20 }} />
         ) : todaysBookings.length === 0 ? (
           <View style={styles.emptyCard}>
-            
+
             <Text style={styles.emptyText}>{t('noBookingsToday')}</Text>
           </View>
         ) : (
-          
+
           todaysBookings.map((booking, index) => (
             <BookingCard
               key={booking.bookingId}
@@ -474,6 +477,7 @@ export default function DashboardScreen() {
                 location: booking.location,
                 address: booking.address,
                 phone: booking.phone,
+                cuisine: booking.cuisine,
               }}
               showActions={index === 0}
               t={t}
@@ -489,6 +493,7 @@ export default function DashboardScreen() {
                   location: booking.location,
                   address: booking.address,
                   phone: booking.phone,
+                  cuisine: booking.cuisine,
                 });
               }}
               onCallClient={() => {
@@ -527,22 +532,30 @@ export default function DashboardScreen() {
               </TouchableOpacity>
             </View>
             <Text style={modalStyles.title}>
-              {selectedBooking?.clientName} {selectedBooking?.occasion}
+              {selectedBooking?.clientName}
             </Text>
-            <Text style={modalStyles.detailText}>
-              {t('time')}: {selectedBooking?.time} - {selectedBooking?.period}
-            </Text>
-            <Text style={modalStyles.detailText}>
-              {t('locationLabel')}: {selectedBooking?.address ? `${selectedBooking.address}, ` : ''}{selectedBooking?.location}
-            </Text>
-            <Text style={modalStyles.detailText}>
-              {selectedBooking?.guests} guests | North Indian + Cake
-            </Text>
+            <View style={modalStyles.detailRow}>
+              <Text style={modalStyles.detailLabel}>Occasion: </Text>
+              <Text style={modalStyles.detailValue}>{selectedBooking?.occasion}</Text>
+            </View>
+            <View style={modalStyles.detailRow}>
+              <Text style={modalStyles.detailLabel}>Time: </Text>
+              <Text style={modalStyles.detailValue}>{selectedBooking?.time} - {selectedBooking?.period}</Text>
+            </View>
+            <View style={modalStyles.detailRow}>
+              <Text style={modalStyles.detailLabel}>Location: </Text>
+              <Text style={modalStyles.detailValue}>{selectedBooking?.address ? `${selectedBooking.address}, ` : ''}{selectedBooking?.location}</Text>
+            </View>
+            <View style={modalStyles.detailRow}>
+              <Text style={modalStyles.detailLabel}>No. of People: </Text>
+              <Text style={modalStyles.detailValue}>{selectedBooking?.guests} guests</Text>
+            </View>
+            <View style={modalStyles.detailRow}>
+              <Text style={modalStyles.detailLabel}>Cuisine Type: </Text>
+              <Text style={modalStyles.detailValue}>{selectedBooking?.cuisine || 'Not specified'}</Text>
+            </View>
 
-            {/* <View style={modalStyles.mapPlaceholder}>
-              <Text style={modalStyles.mapText}>{t('mapPreview')}</Text>
-              <Text style={modalStyles.mapSubText}>{selectedBooking?.address ? `${selectedBooking.address}, ` : ''}{selectedBooking?.location}</Text>
-            </View> */}
+          
 
             <View style={modalStyles.actionRow}>
               <TouchableOpacity
@@ -577,7 +590,7 @@ export default function DashboardScreen() {
         </View>
       </Modal>
 
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -592,7 +605,7 @@ const modalStyles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    paddingBottom: 40,
+    paddingBottom: 80,
     borderWidth: 1,
     borderColor: '#d3dbe2',
   },
@@ -627,6 +640,21 @@ const modalStyles = StyleSheet.create({
     color: '#4b5563',
     marginBottom: 20,
     lineHeight: 20,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    alignItems: 'flex-start',
+  },
+  detailLabel: {
+    fontSize: 15,
+    color: '#6b7280',
+  },
+  detailValue: {
+    fontSize: 15,
+    color: '#1f2937',
+    fontWeight: '500',
+    flex: 1,
   },
   mapPlaceholder: {
     height: 120,

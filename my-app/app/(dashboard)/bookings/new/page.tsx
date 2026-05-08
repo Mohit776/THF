@@ -253,6 +253,7 @@ export default function CreateBookingPage() {
         clientName: pendingData.clientName,
         phone: pendingData.phone,
         eventType: pendingData.eventType,
+        cuisine: pendingData.cuisine,
         date: dateTime,
         location: pendingData.location,
         address: pendingData.address,
@@ -363,6 +364,9 @@ export default function CreateBookingPage() {
                 <option value="udaipur">Udaipur</option>
                 <option value="varanasi">Varanasi</option>
                 <option value="rajkot">Rajkot</option>
+                <option value="haridwar">Haridwar</option>
+                <option value="rishikesh">Rishikesh</option>
+                <option value="mussoorie">Mussoorie</option>
               </select>
               <ChevronDown className="w-4 h-4 text-[#9CA3AF] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
@@ -402,9 +406,14 @@ export default function CreateBookingPage() {
             <div className="relative">
               <select name="cuisine" required className={inputClass + " appearance-none bg-white"}>
                 <option value="">Cuisine type</option>
-                <option value="indian">Indian</option>
-                <option value="continental">Continental</option>
-                <option value="chinese">Chinese</option>
+                <option value="North Indian">North Indian</option>
+                <option value="South Indian">South Indian</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Italian">Italian</option>
+                <option value="Mexican">Mexican</option>
+                <option value="Fast food">Fast food</option>
+                <option value="Korean">Korean</option>
+                <option value="Thai">Thai</option>
               </select>
               <ChevronDown className="w-4 h-4 text-[#9CA3AF] absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>

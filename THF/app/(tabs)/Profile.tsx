@@ -7,8 +7,8 @@ import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React from 'react';
-import { ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, RefreshControl,  } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, RefreshControl } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Navbar from '../../components/Navbar';
 import { useLanguage } from '@/src/hooks/useLanguage';
 import { Fonts } from '@/src/theme/fonts';
@@ -135,16 +135,18 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const insets = useSafeAreaInsets();
+
   if (loading && !profile) {
     return (
-      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', paddingTop: insets.top }]}>
         <ActivityIndicator color="#E8304A" size="large" />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <Navbar />
       <ScrollView
@@ -186,7 +188,7 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-      
+
         {/* ── Stats Section ── */}
         <View style={styles.threeStatsRow}>
           <View style={styles.threeStatCard}>
@@ -227,12 +229,12 @@ export default function ProfileScreen() {
         <View style={styles.footerInfo}>
           <Text style={styles.versionText}>Version {Constants.expoConfig?.version ?? '1.0.0'}</Text>
           <Text style={styles.developerText}>Developed by The Famous Halwai</Text>
-        
+
         </View>
 
         <View style={{ height: 16 }} />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -44,7 +44,11 @@ const CITIES = [  "Delhi",
   'Mysuru',
   'Udaipur',
   'Varanasi',
-  'Rajkot'];
+  'Rajkot',
+  'Haridwar',
+  'Rishikesh',
+  'Mussoorie'
+];
 
 // ── Editable field ──────────────────────────────────────────────────────────
 interface EditFieldProps {

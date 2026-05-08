@@ -2,8 +2,12 @@
  * src/hooks/useUserStore.ts
  *
  * Central reactive store for the authenticated partner's profile.
+ * Implemented as a TRUE singleton store to prevent infinite re-render
+ * loops caused by cross-component listener notifications.
  *
  * Strategy:
+ *  - Single shared state object at module level
+ *  - React's useSyncExternalStore for safe subscription
  *  - On mount: immediately serve data from AsyncStorage (instant UI)
  *  - Then: hydrate from Firestore and write-back to AsyncStorage cache
  *  - All writes go to Firestore first, then update the cache + local state

@@ -59,7 +59,11 @@ const CITIES = [  "Delhi",
   'Mysuru',
   'Udaipur',
   'Varanasi',
-  'Rajkot'];
+  'Rajkot',
+  'Haridwar',
+  'Rishikesh',
+  'Mussoorie'
+];
 const ZONES = ['North zone', 'South zone', 'East zone', 'West zone'];
 
 const isValidEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);

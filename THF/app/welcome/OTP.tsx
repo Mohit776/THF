@@ -274,7 +274,7 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
         {/* Bottom Section */}
         <View style={styles.bottom}>
           {/* WhatsApp Checkbox */}
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.checkboxRow}
             onPress={() => setWhatsapp((v) => !v)}
             activeOpacity={0.8}
@@ -283,7 +283,7 @@ export default function OTPScreen({ onVerify, onBack }: OTPScreenProps) {
               {whatsapp && <Text style={styles.checkmark}>✓</Text>}
             </View>
             <Text style={styles.checkboxLabel}>{t('whatsappUpdates')}</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
 
           {/* Verify Button */}
           <TouchableOpacity

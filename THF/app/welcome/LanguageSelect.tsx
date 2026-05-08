@@ -56,7 +56,9 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
 
       {/* Bottom Sheet */}
       <View style={styles.bottomSheet}>
-        <Text style={styles.title}>{tFor(selected, 'selectLanguageTitle')}</Text>
+        <View style={styles.header}>
+          <Text style={styles.title}>{tFor(selected, 'selectLanguageTitle')}</Text>
+        </View>
 
         {/* Language Options */}
         <View style={styles.optionsRow}>
@@ -79,11 +81,14 @@ export default function LanguageSelectScreen({ onContinue }: LanguageSelectScree
                 {lang.label}
               </Text>
               {selected === lang.id ? (
-                <Image
-                  source={require('../../assets/THF/Check.svg')}
-                  style={styles.checkIcon}
-                  contentFit="contain"
-                />
+                <View style={styles.checkCircle}>
+                  <Image
+                    source={require('../../assets/THF/Check.svg')}
+                    style={styles.checkIcon}
+                    contentFit="contain"
+                    tintColor="#fff"
+                  />
+                </View>
               ) : (
                 <View style={styles.radioOuter} />
               )}
@@ -113,7 +118,7 @@ const styles = StyleSheet.create({
   /* ── Hero Image ── */
   imageContainer: {
     width: '100%',
-    height: height * 0.65,
+    height: height * 0.6,
     overflow: 'hidden',
   },
   heroImage: {
@@ -134,47 +139,48 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 20,
     paddingBottom: 24,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#1a1a1a',
+  header: {
+    alignItems: 'center',
     marginBottom: 20,
-    letterSpacing: 0.1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#2D3748',
+    textAlign: 'center',
   },
 
   /* ── Language Options ── */
   optionsRow: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 12,
-    marginBottom: 24,
-    
+    marginBottom: 20,
   },
   optionButton: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: '#e0e0e0',
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    height: 55,
+    borderColor: '#E2E8F0',
     backgroundColor: '#fff',
   },
   optionButtonSelected: {
-    borderColor: '#e0e0e0',
+    borderColor: '#CBD5E0',
     backgroundColor: '#fff',
   },
   optionText: {
-    fontSize: 15,
-    color: '#888',
+    fontSize: 17,
+    color: '#718096',
     fontWeight: '400',
   },
   optionTextSelected: {
-    color: '#1a1a1a',
+    color: '#4A5568',
     fontWeight: '500',
   },
 
@@ -183,28 +189,36 @@ const styles = StyleSheet.create({
     width: 22,
     height: 22,
     borderRadius: 11,
-    borderWidth: 2,
-    borderColor: '#ccc',
+    borderWidth: 1.5,
+    borderColor: '#718096',
     backgroundColor: '#fff',
   },
-  checkIcon: {
+  checkCircle: {
     width: 22,
     height: 22,
+    borderRadius: 11,
+    backgroundColor: '#10B981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIcon: {
+    width: 14,
+    height: 14,
   },
 
   /* Continue Button */
   continueButton: {
-    backgroundColor: '#E8304A',
-    borderRadius: 12,
-    paddingVertical: 16,
+    backgroundColor: '#E53E3E',
+    borderRadius: 14,
+    paddingVertical: 18,
     alignItems: 'center',
-    shadowColor: '#E8304A',
-   
+    justifyContent: 'center',
+    width: '100%',
   },
   continueText: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
 });

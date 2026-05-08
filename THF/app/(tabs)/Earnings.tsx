@@ -1,42 +1,66 @@
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, StatusBar, RefreshControl,  } from 'react-native';
+import { View, TouchableOpacity, ScrollView, StyleSheet, ActivityIndicator, StatusBar, RefreshControl, Pressable, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import Navbar from '../../components/Navbar';
 import { auth } from '@/src/services/firebaseConfig';
 import { getPartnerBookings, type Booking } from '@/src/services/bookingService';
 import dayjs from 'dayjs';
 import { useLanguage } from '@/src/hooks/useLanguage';
 import { CustomText as Text } from '../../components/CustomText';
-
+import { Ionicons } from '@expo/vector-icons';
 
 /* ── Local display type for TransactionRow component ── */
 interface DisplayTransaction {
   id: string;
-  clientName: string;
+  eventName: string;
   date: string;
-  guests: number;
   type: string;
   amount: number;
 }
 
+/* ── Transaction Row Styles (defined before TransactionRow so they are in scope) ── */
+const txStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+  },
+  iconBox: {
+    marginRight: 12,
+  },
+  iconBoxNegative: {
+    opacity: 0.8,
+  },
+  info: { flex: 1 },
+  name: { fontSize: 16, fontWeight: '600', color: '#1A1C1E', marginBottom: 4 },
+  meta: { fontSize: 13, color: '#889098' },
+  amount: { fontSize: 16, fontWeight: '700', color: '#22A75D' },
+  amountNegative: { color: '#E8304A' },
+});
+
 /* ── Transaction Row ── */
 function TransactionRow({ transaction }: { transaction: DisplayTransaction }) {
   const isNegative = transaction.amount < 0;
-  
+
   return (
     <View style={txStyles.row}>
-      <View style={txStyles.iconBox}>
-        <Image source={require('@/assets/THF/Check.svg')} style={{ width: 28, height: 28 }} />
+      <View style={[txStyles.iconBox, isNegative ? txStyles.iconBoxNegative : null]}>
+        <Ionicons name="checkmark-circle" size={24} color="#22A75D" />
       </View>
       <View style={txStyles.info}>
-        <Text style={txStyles.name}>{transaction.type === 'fee' ? 'Platform Fee' : `Booking - ${transaction.clientName}`}</Text>
+        <Text style={txStyles.name}>{transaction.eventName}</Text>
         <Text style={txStyles.meta}>
-          {transaction.date} | {transaction.guests ? `${transaction.guests} guests | ` : ''}{transaction.type === 'fee' ? '10% deducted' : 'Payout'}
+          {transaction.date} | {transaction.type}
         </Text>
       </View>
       <Text style={[txStyles.amount, isNegative && txStyles.amountNegative]}>
-        {isNegative ? '-' : '+'}₹{Math.abs(transaction.amount)}
+        {isNegative ? '-' : '+'}₹{Math.abs(transaction.amount).toLocaleString('en-IN')}
       </Text>
     </View>
   );
@@ -44,59 +68,72 @@ function TransactionRow({ transaction }: { transaction: DisplayTransaction }) {
 
 /* ── Main Screen ── */
 export default function EarningsScreen() {
+  const [allBookings, setAllBookings] = useState<any[]>([]);
   const [transactions, setTransactions] = useState<DisplayTransaction[]>([]);
   const [totalEarned, setTotalEarned] = useState(0);
-  const [completionRate, setCompletionRate] = useState('0%');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const month = dayjs().format('MMMM YYYY');
-  const prevMonth = dayjs().subtract(1, 'month').format('MMMM YYYY');
+  const [activeTab, setActiveTab] = useState<'Daily' | 'Weekly' | 'Monthly'>('Monthly');
+  
+  // Date selection states
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [isMonthPickerVisible, setMonthPickerVisible] = useState(false);
+  
   const { t } = useLanguage();
+  
+  const availableMonths = Array.from({ length: 12 }).map((_, i) => dayjs().subtract(i, 'month'));
 
   const fetchTransactions = React.useCallback(async () => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
     try {
-      // Fetch all bookings for the partner
       const bookingsData = await getPartnerBookings(uid);
-      
-      let sum = 0;
-      const displayTx: DisplayTransaction[] = [];
-      
-      // Filter and process ONLY completed bookings for earnings
       const completedBookings = bookingsData.filter(b => b.status === 'completed');
-      
-      completedBookings.forEach(booking => {
-        const amount = booking.amount || 0;
-        sum += amount;
-        
-        displayTx.push({
-          id: booking.bookingId,
-          clientName: booking.clientName,
-          date: dayjs((booking.date as any)?.toDate?.() ?? booking.date).format('DD MMM'),
-          guests: booking.guests || 0,
-          type: 'Payout',
-          amount: amount,
-        });
-
-      
-      });
-
-      // Calculate completion rate based on all bookings
-      if (bookingsData.length > 0) {
-        const count = completedBookings.length;
-        const rate = Math.round((count / bookingsData.length) * 100);
-        setCompletionRate(`${rate}%`);
-      } else {
-        setCompletionRate('0%');
-      }
-
-      setTotalEarned(sum);
-      setTransactions(displayTx);
+      setAllBookings(completedBookings);
     } catch (error) {
       console.error('[Earnings] fetch error:', error);
     }
   }, []);
+
+  // Filter transactions when date, allBookings, or activeTab changes
+  useEffect(() => {
+    let monthSum = 0;
+    const displayTx: DisplayTransaction[] = [];
+    
+    // Month range for the summary card
+    const monthStart = selectedDate.startOf('month');
+    const monthEnd = selectedDate.endOf('month');
+
+    // Tab range for the transactions list
+    const unit = activeTab === 'Daily' ? 'day' : activeTab === 'Weekly' ? 'week' : 'month';
+    const tabStart = selectedDate.startOf(unit);
+    const tabEnd = selectedDate.endOf(unit);
+
+    allBookings.forEach(booking => {
+      const bookingDate = dayjs((booking.date as any)?.toDate?.() ?? booking.date);
+      
+      // Update monthly total (for summary card)
+      if ((bookingDate.isAfter(monthStart) || bookingDate.isSame(monthStart)) && 
+          (bookingDate.isBefore(monthEnd) || bookingDate.isSame(monthEnd))) {
+        monthSum += (booking.amount || 0);
+      }
+
+      // Update transactions list (based on tab)
+      if ((bookingDate.isAfter(tabStart) || bookingDate.isSame(tabStart)) && 
+          (bookingDate.isBefore(tabEnd) || bookingDate.isSame(tabEnd))) {
+        displayTx.push({
+          id: booking.bookingId || Math.random().toString(),
+          eventName: booking.eventName || `Booking - ${booking.clientName}`,
+          date: bookingDate.format('DD MMM | ddd'),
+          type: 'Payout',
+          amount: booking.amount || 0,
+        });
+      }
+    });
+
+    setTotalEarned(monthSum);
+    setTransactions(displayTx);
+  }, [allBookings, selectedDate, activeTab]);
 
   const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
@@ -110,54 +147,54 @@ export default function EarningsScreen() {
 
   const formatAmount = (amount: number) =>
     amount === 0 ? '0' : amount.toLocaleString('en-IN');
-    
-  const bookingsCount = transactions.length; 
-  const avgRatings = '4.9';
-  const comparisonPercent = '22%';
 
+  const comparisonPercent = '22%';
+  const insets = useSafeAreaInsets();
+  const prevMonthText = selectedDate.subtract(1, 'month').format('MMMM');
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#f5f5f7" />
       <Navbar />
-      <ScrollView 
-        style={styles.scroll} 
-        contentContainerStyle={styles.scrollContent} 
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8304A" />}
       >
         <Text style={styles.pageTitle}>{t('myEarnings')}</Text>
-        <Text style={styles.monthLabel}>{month}</Text>
 
         {/* ── Summary Card ── */}
         <View style={styles.summaryCard}>
-          <Text style={styles.totalLabel}>{t('totalEarned')} - {month}</Text>
-          <Text style={styles.totalAmount}>₹{formatAmount(totalEarned)}</Text>
-          <Text style={styles.comparison}>{comparisonPercent} compared to {prevMonth}</Text>
-          
-          <View style={styles.divider} />
-          
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{bookingsCount}</Text>
-              <Text style={styles.statLabel}>Bookings</Text>
+          <View style={styles.summaryHeader}>
+            <View>
+              <Text style={styles.totalLabel}>Total earned</Text>
+              <Text style={styles.totalAmount}>₹{formatAmount(totalEarned)}</Text>
             </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{avgRatings}</Text>
-              <Text style={styles.statLabel}>Avg. Ratings</Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{completionRate}</Text>
-              <Text style={styles.statLabel}>Completion</Text>
-            </View>
-            <View style={styles.void}>
-             
-            </View>
+            <TouchableOpacity style={styles.monthDropdown} onPress={() => setMonthPickerVisible(true)}>
+              <Text style={styles.monthDropdownText}>{selectedDate.format('MMMM')}</Text>
+              <Ionicons name="chevron-down" size={16} color="#4A4A4A" />
+            </TouchableOpacity>
           </View>
+          <Text style={styles.comparison}>{comparisonPercent} compared to {prevMonthText}</Text>
         </View>
 
-        {/* ── Recent Transactions ── */}
-        <Text style={styles.sectionTitle}>{t('recentTransactions')}</Text>
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          {['Daily', 'Weekly', 'Monthly'].map((tab) => (
+             <Pressable
+               key={tab}
+               style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
+               onPress={() => setActiveTab(tab as 'Daily' | 'Weekly' | 'Monthly')}
+             >
+               <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                 {tab}
+               </Text>
+             </Pressable>
+          ))}
+        </View>
+
+        {/* ── Transactions ── */}
         {loading && !refreshing ? (
           <ActivityIndicator color="#E8304A" style={{ marginTop: 16 }} />
         ) : transactions.length === 0 ? (
@@ -174,7 +211,34 @@ export default function EarningsScreen() {
 
         <View style={{ height: 24 }} />
       </ScrollView>
-    </SafeAreaView>
+
+      {/* Month Picker Modal */}
+      <Modal visible={isMonthPickerVisible} transparent animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setMonthPickerVisible(false)}>
+          <View style={styles.modalContent}>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {availableMonths.map((m, i) => (
+                <TouchableOpacity
+                  key={i}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    setSelectedDate(m);
+                    setMonthPickerVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalItemText, selectedDate.isSame(m, 'month') && styles.modalItemTextSelected]}>
+                    {m.format('MMMM YYYY')}
+                  </Text>
+                  {selectedDate.isSame(m, 'month') && (
+                    <Ionicons name="checkmark" size={20} color="#E8304A" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </View>
   );
 }
 
@@ -184,34 +248,69 @@ const styles = StyleSheet.create({
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
 
-  pageTitle: { fontSize: 20, fontWeight: '700', color: '#1A1C1E', marginBottom: 6 },
-  monthLabel: { fontSize: 14, color: '#6C7278', marginBottom: 20 },
+  pageTitle: { fontSize: 22, fontWeight: '700', color: '#1A1C1E', marginBottom: 16 },
 
   /* Summary Card */
   summaryCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
-    marginBottom: 28,
+    marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#d3dbe2',
+    borderColor: '#E8E8E8',
+    elevation: 5,
   },
-  totalLabel: { fontSize: 13, color: '#6C7278', marginBottom: 0, fontWeight: '500' },
-  totalAmount: { fontSize: 36, fontWeight: '800', color: '#1A1C1E', marginBottom: 0 },
-  comparison: { fontSize: 13, color: '#6C7278', marginBottom: 15 },
-  divider: { height: 1, backgroundColor: '#d3dbe2', marginBottom: 10 },
-  statsRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  statItem: { alignItems: 'flex-start', width: '25%' },
-  statValue: { fontSize: 24, fontWeight: '900',color: '#22A75D', marginBottom: 1 },
-  statLabel: { fontSize: 11, color: '#889098' },
-  void: { width: '10%' },
+  summaryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  totalLabel: { fontSize: 14, color: '#6C7278', marginBottom: 4 },
+  totalAmount: { fontSize: 32, fontWeight: '800', color: '#1A1C1E', marginBottom: 0 },
+  monthDropdown: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F2F4F7',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  monthDropdownText: { fontSize: 14, color: '#4A4A4A', marginRight: 4, fontWeight: '500' },
+  comparison: { fontSize: 14, color: '#6C7278' },
 
-  /* Section */
-  sectionTitle: { fontSize: 18, fontWeight: '700', color: '#1A1C1E', marginBottom: 16 },
+  /* Tabs */
+  tabsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 9,
+    alignItems: 'center',
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: '#E8E8E8',
+    backgroundColor: '#fff',
+    marginHorizontal: 4,
+  },
+  tabButtonActive: {
+    backgroundColor: '#E8304A',
+    borderColor: '#E8304A',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#4A4A4A',
+    fontWeight: '500',
+  },
+  tabTextActive: {
+    color: '#fff',
+  },
 
   /* Transactions list container */
   transactionsList: {
-    gap: 12, // Spacing between each transaction card
+    gap: 12, 
   },
 
   /* Empty state */
@@ -224,32 +323,39 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: { fontSize: 14, color: '#889098', fontWeight: '500' },
-});
 
-const txStyles = StyleSheet.create({
-  row: {
+  /* Modal */
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    width: '80%',
+    maxHeight: '60%',
+    borderRadius: 16,
+    padding: 16,
+  },
+  modalItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d3dbe2',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F2F4F7',
   },
-  iconBox: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  modalItemText: {
+    fontSize: 16,
+    color: '#4A4A4A',
   },
-  info: { flex: 1 },
-  name: { fontSize: 14, fontWeight: '600', color: '#1A1C1E', marginBottom: 4 },
-  meta: { fontSize: 12, color: '#889098' },
-  amount: { fontSize: 15, fontWeight: '700', color: '#22A75D' },
-  amountNegative: { color: '#E8304A' },
+  modalItemTextSelected: {
+    color: '#E8304A',
+    fontWeight: '600',
+  },
 });
+
+
 
 

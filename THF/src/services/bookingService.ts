@@ -46,6 +46,7 @@ export interface Booking {
   guests: number;
   /** Booking fee in INR */
   amount: number;
+  cuisine?: string;
   status: 'broadcasted' | 'pending' | 'accepted' | 'active' | 'completed' | 'cancelled';
 }
 

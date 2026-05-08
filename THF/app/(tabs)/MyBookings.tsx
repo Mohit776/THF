@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { View, TouchableOpacity, ScrollView, StyleSheet, StatusBar, ActivityIndicator, RefreshControl, Linking, Alert, Modal } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Navbar from '../../components/Navbar';
 import OtpInputBoxes from '../../components/OtpInputBoxes';
 import { auth } from '@/src/services/firebaseConfig';
@@ -38,6 +38,7 @@ interface NextUpBooking {
   address?: string;
   guests: number;
   cuisine: string;
+  occasion: string;
   phone?: string;
 }
 
@@ -55,10 +56,10 @@ interface MyBookingsScreenProps {
 /* ── Status Badge ── */
 function StatusBadge({ status }: { status: BookingStatus }) {
   const config: Record<BookingStatus, { bg: string; color: string }> = {
-    Today:     { bg: '#FFF3CD', color: '#B8860B' },
-    Active:    { bg: '#E3F0FF', color: '#1565C0' },
+    Today: { bg: '#FFF3CD', color: '#B8860B' },
+    Active: { bg: '#E3F0FF', color: '#1565C0' },
     Completed: { bg: '#E8F5E9', color: '#2e7d32' },
-    Upcoming:  { bg: '#F3E5F5', color: '#6A1B9A' },
+    Upcoming: { bg: '#F3E5F5', color: '#6A1B9A' },
   };
   const { bg, color } = config[status];
   return (
@@ -90,7 +91,7 @@ function BookingCard({
         <Text style={cardStyles.meta}>
           {booking.time} | {booking.guests} guests
         </Text>
-        <Text style={cardStyles.location}>{booking.location}</Text>
+        <Text style={cardStyles.location}>{booking.address ? `${booking.address}, ${booking.location}` : booking.location}</Text>
       </View>
 
       {/* Right */}
@@ -154,6 +155,7 @@ export default function MyBookingsScreen() {
         location: nextUp?.locationNote || '',
         guests: nextUp?.guests?.toString() || '0',
         cuisine: nextUp?.cuisine || '',
+        occasion: nextUp?.occasion || 'Celebration',
       },
     });
   };
@@ -211,28 +213,31 @@ export default function MyBookingsScreen() {
   const nextUpBooking = mappedBookings.find(b => b.status === 'Today' || b.status === 'Active');
   const nextUp: NextUpBooking | undefined = nextUpBooking
     ? {
-        id: nextUpBooking.id,
-        label: nextUpBooking.status === 'Active' ? t('activeBooking') : t('nextUpToday'),
-        title: nextUpBooking.title,
-        time: nextUpBooking.time,
-        locationNote: nextUpBooking.location,
-        address: nextUpBooking.address,
-        guests: nextUpBooking.guests,
-        cuisine: fsBookings.find(b => b.bookingId === nextUpBooking.id)?.eventType ?? '',
-        phone: fsBookings.find(b => b.bookingId === nextUpBooking.id)?.phone,
-      }
+      id: nextUpBooking.id,
+      label: nextUpBooking.status === 'Active' ? t('activeBooking') : t('nextUpToday'),
+      title: nextUpBooking.title,
+      time: nextUpBooking.time,
+      locationNote: nextUpBooking.location,
+      address: nextUpBooking.address,
+      guests: nextUpBooking.guests,
+      cuisine: fsBookings.find(b => b.bookingId === nextUpBooking.id)?.cuisine ?? '',
+      occasion: fsBookings.find(b => b.bookingId === nextUpBooking.id)?.eventType ?? '',
+      phone: fsBookings.find(b => b.bookingId === nextUpBooking.id)?.phone,
+    }
     : undefined;
 
   const filteredBookings =
     activeFilter === 'All' ? mappedBookings : mappedBookings.filter(b => b.status === activeFilter);
 
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <Navbar />
-      <ScrollView 
-        style={styles.scroll} 
-        contentContainerStyle={styles.scrollContent} 
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#E8304A" />}
       >
@@ -245,46 +250,56 @@ export default function MyBookingsScreen() {
             <Text style={styles.nextUpLabel}>{nextUp.label}</Text>
             <Text style={styles.nextUpTitle}>{nextUp.title}</Text>
             <Text style={styles.nextUpMeta}>{t('time')}: {nextUp.time}</Text>
-            <Text style={styles.nextUpMeta}>{t('locationLabel')}: {nextUp.locationNote}</Text>
-            <Text style={styles.nextUpMeta}>{nextUp.guests} guests | {nextUp.cuisine}</Text>
+            <Text style={styles.nextUpMeta} numberOfLines={2}>
+              <Text style={{ fontWeight: '700', color: '#444' }}>{t('locationLabel')}: </Text>
+              {nextUp.address || nextUp.locationNote}
+            </Text>
+            {nextUp.address && nextUp.locationNote && (
+              <Text style={[styles.nextUpMeta, { marginTop: 2, fontSize: 12, opacity: 0.8 }]}>
+                ({nextUp.locationNote})
+              </Text>
+            )}
+            <Text style={styles.nextUpMeta}>{nextUp.guests} Guests | {nextUp.cuisine}</Text>
 
-             <View style={styles.nextUpActions}>
-               <TouchableOpacity 
-                 style={[styles.navBtn, { flex: 1, backgroundColor: '#EA243F' }]} 
-                 activeOpacity={0.8}
-                 onPress={openOtpModal}
-               >
-                 <Text style={[styles.navBtnText, { color: '#fff' }]}>{t('reachedLocation')}</Text>
-               </TouchableOpacity>
+            <View style={styles.nextUpActions}>
+              <TouchableOpacity
+                style={[styles.actionBtn, { backgroundColor: '#EA243F' }]}
+                activeOpacity={0.8}
+                onPress={openOtpModal}
+              >
+                <Text style={styles.actionBtnText} adjustsFontSizeToFit numberOfLines={1}>
+                  {t('reachedLocation')}
+                </Text>
+              </TouchableOpacity>
 
-               <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'space-between' }}>
-               <TouchableOpacity 
-                 style={[styles.navBtn, { flex: 1 }]} 
-                 activeOpacity={0.8}
-                 onPress={() => {
-                   const targetAddress = nextUp.address ? `${nextUp.address}, ${nextUp.locationNote}` : nextUp.locationNote;
-                   if (targetAddress && targetAddress !== 'not assigned') {
-                     Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(targetAddress)}`);
-                   }
-                 }}
-               >
-                 <Text style={styles.navBtnText}>{t('navigateLocation')}</Text>
-               </TouchableOpacity>
-               <TouchableOpacity 
-                 style={[styles.callBtn, { flex: 1 }]} 
-                 activeOpacity={0.8}
-                 onPress={() => {
-                   if (nextUp.phone) {
-                     Linking.openURL(`tel:${nextUp.phone}`);
-                   } else {
-                     Alert.alert(t('unavailable'), t('phoneNotProvided2'));
-                   }
-                 }}
-               >
-                 <Text style={styles.callBtnText}>{t('callClient')}</Text>
-               </TouchableOpacity>
-               </View>
-             </View>
+              <View style={styles.actionBtnRow}>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { flex: 1, backgroundColor: '#4591E8' }]}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    const addr = encodeURIComponent(nextUp.address || nextUp.locationNote);
+                    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${addr}`);
+                  }}
+                >
+                  <Text style={styles.actionBtnText} adjustsFontSizeToFit numberOfLines={1}>
+                    {t('navigateLocation')}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionBtn, { flex: 1, backgroundColor: '#31B76B' }]}
+                  activeOpacity={0.8}
+                  onPress={() => {
+                    if (nextUp.phone) {
+                      Linking.openURL(`tel:${nextUp.phone}`);
+                    }
+                  }}
+                >
+                  <Text style={styles.actionBtnText} adjustsFontSizeToFit numberOfLines={1}>
+                    {t('callClient')}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
         )}
 
@@ -345,20 +360,20 @@ export default function MyBookingsScreen() {
             </TouchableOpacity>
 
             {/* Cancel */}
-            <TouchableOpacity style={{ marginTop: 16 }} onPress={closeOtpModal}>
-              <Text style={{ color: '#888', fontWeight: '500' }}>{t('cancel')}</Text>
+            <TouchableOpacity style={styles.cancelModalBtn} onPress={closeOtpModal}>
+              <Text style={styles.cancelModalText}>{t('cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
-    </SafeAreaView>
+    </View>
   );
 }
 
 /* ── Styles ── */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f7' },
+  container: { flex: 1, backgroundColor: '#fff' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
 
@@ -378,18 +393,43 @@ const styles = StyleSheet.create({
   },
   nextUpLabel: { fontSize: 12, color: '#888', marginBottom: 6 },
   nextUpTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginBottom: 10, lineHeight: 26 },
-  nextUpMeta: { fontSize: 13, color: '#555', marginBottom: 4 },
-  nextUpActions: { flexDirection: 'column', gap: 10, marginTop: 16 },
-  navBtn: {
-    borderRadius: 8, paddingHorizontal: 16,
-    paddingVertical: 10, alignItems: 'center', backgroundColor: '#4591E8'
+  nextUpMeta: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+    lineHeight: 18,
   },
-  navBtnText: { fontSize: 13, color: '#fff', fontWeight: '500' },
-  callBtn: {
-     borderRadius: 8, paddingHorizontal: 16,
-    paddingVertical: 10, alignItems: 'center',backgroundColor: '#31B76B' 
+  nextUpActions: {
+    flexDirection: 'column',
+    gap: 10,
+    marginTop: 16,
+    width: '100%',
   },
-  callBtnText: { fontSize: 13, color: '#fff', fontWeight: '500' },
+  actionBtnRow: {
+    flexDirection: 'row',
+    gap: 10,
+    width: '100%',
+  },
+  actionBtn: {
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  actionBtnText: {
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '700',
+    textAlign: 'center',
+
+  },
 
   /* Filter Tabs */
   filterRow: {
@@ -422,21 +462,23 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 24,
     alignItems: 'center',
-   
+
   },
   emptyText: { fontSize: 14, color: '#999', fontWeight: '500' },
 
 
   /* OTP Modal UI */
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  modalContent: { backgroundColor: '#fff', borderRadius: 16, padding: 24, width: '90%', alignItems: 'center' },
-  modalTitle: { fontSize: 18, fontWeight: '700', color: '#111', marginBottom: 8 },
-  modalSubtitle: { fontSize: 13, color: '#777', marginBottom: 16, textAlign: 'center', lineHeight: 18 },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  modalContent: { backgroundColor: '#fff', borderRadius: 20, padding: 24, width: '100%', maxWidth: 400, alignItems: 'center', elevation: 5, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 3.84 },
+  modalTitle: { fontSize: 20, fontWeight: '700', color: '#111', marginBottom: 8, textAlign: 'center' },
+  modalSubtitle: { fontSize: 14, color: '#666', marginBottom: 24, textAlign: 'center', lineHeight: 20 },
   phoneDisplay: { backgroundColor: '#F5F5F7', borderRadius: 10, paddingVertical: 12, paddingHorizontal: 20, marginBottom: 20 },
   phoneText: { fontSize: 16, fontWeight: '600', color: '#333', letterSpacing: 1 },
-  verifyBtn: { backgroundColor: '#E8304A', width: '100%', paddingVertical: 14, borderRadius: 8, alignItems: 'center' },
-  verifyBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
+  verifyBtn: { backgroundColor: '#E8304A', width: '100%', paddingVertical: 14, borderRadius: 12, alignItems: 'center', marginTop: 8 },
+  verifyBtnText: { color: '#fff', fontWeight: '600', fontSize: 16 },
   btnDisabled: { opacity: 0.6 },
+  cancelModalBtn: { marginTop: 16, paddingVertical: 8, paddingHorizontal: 16 },
+  cancelModalText: { color: '#888', fontWeight: '600', fontSize: 15 },
 });
 
 const cardStyles = StyleSheet.create({
@@ -449,7 +491,7 @@ const cardStyles = StyleSheet.create({
     gap: 12,
     borderWidth: 1,
     borderColor: '#d3dbe2',
-   
+
   },
   dateBox: {
     width: 44,

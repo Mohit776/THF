@@ -54,10 +54,14 @@ export default function AccountDetailsScreen({ onSave }: AccountDetailsScreenPro
     load();
   }, []);
 
-  const isValid =
+  const isBankValid =
     accountNumber.trim().length > 0 &&
     ifsc.trim().length > 0 &&
     bankName.trim().length > 0;
+
+  const isUpiValid = upiId.trim().length > 0;
+
+  const isValid = isBankValid || isUpiValid;
 
   const handleSave = async () => {
     if (!isValid || saving) return;
@@ -136,6 +140,7 @@ export default function AccountDetailsScreen({ onSave }: AccountDetailsScreenPro
               value={accountNumber}
               onChangeText={setAccountNumber}
               keyboardType="number-pad"
+              maxLength={20}
               onFocus={() => setFocusedField('account')}
               onBlur={() => setFocusedField(null)}
               returnKeyType="next"
@@ -149,6 +154,7 @@ export default function AccountDetailsScreen({ onSave }: AccountDetailsScreenPro
               value={ifsc}
               onChangeText={(t) => setIfsc(t.toUpperCase())}
               autoCapitalize="characters"
+               maxLength={20}
               onFocus={() => setFocusedField('ifsc')}
               onBlur={() => setFocusedField(null)}
               returnKeyType="next"
@@ -161,6 +167,7 @@ export default function AccountDetailsScreen({ onSave }: AccountDetailsScreenPro
               style={styles.input}
               value={bankName}
               onChangeText={setBankName}
+               maxLength={100}
               onFocus={() => setFocusedField('bank')}
               onBlur={() => setFocusedField(null)}
               returnKeyType="next"

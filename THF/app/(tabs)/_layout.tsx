@@ -10,9 +10,9 @@ export default function TabLayout() {
             headerShown: false,
             tabBarActiveTintColor: '#E8304A',
             tabBarStyle: {
-                height: 65 + insets.bottom,
-                paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
-                paddingTop: insets.bottom > 0 ? 0 : 4,
+                height: 60 + insets.bottom,
+                paddingBottom: insets.bottom > 0 ? insets.bottom : 4,
+                paddingTop: 4,
                 borderTopWidth: 1,
                 borderTopColor: '#f0f0f0',
                 backgroundColor: '#fff',
@@ -22,7 +22,6 @@ export default function TabLayout() {
             tabBarLabelStyle: {
                 fontSize: 12,
                 fontWeight: '500',
-                marginBottom: insets.bottom > 0 ? 0 : 4,
             }
         }}>
             <Tabs.Screen

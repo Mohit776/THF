@@ -85,6 +85,7 @@ export async function createBookingForChef(
     clientName: string;
     phone: string;
     eventType: string;
+    cuisine?: string;
     date: Date;
     location: string;
     guests: number;
@@ -102,6 +103,7 @@ export async function createBookingForChef(
       clientName: data.clientName,
       phone: data.phone,
       eventType: data.eventType,
+      cuisine: data.cuisine || "",
       date: data.date,
       location: data.location,
       address: data.address || "",
