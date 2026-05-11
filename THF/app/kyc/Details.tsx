@@ -450,7 +450,7 @@ const dropStyles = StyleSheet.create({
   overlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)', justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: '#fff', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    paddingTop: 20, paddingBottom: 40, maxHeight: 360,
+    paddingTop: 20, paddingBottom: 40, maxHeight: '90%',
   },
   sheetTitle: {
     fontSize: 16, fontWeight: '700', color: '#111',

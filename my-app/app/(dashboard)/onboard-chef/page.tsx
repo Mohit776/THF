@@ -1,15 +1,36 @@
 "use client";
 
-import { ChevronDown, Upload } from "lucide-react";
-import { useState } from "react";
+import { ChevronDown, Upload, X } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { onboardChef } from "@/app/actions/chefs";
+
+const CUISINES_LIST = ['North Indian', 'South Indian', 'Chinese', 'Mexican', 'Thai', 'Fast Food', 'Korean', 'Italian'];
 
 export default function OnboardChefPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [aadharFileName, setAadharFileName] = useState<string | null>(null);
   const [panFileName, setPanFileName] = useState<string | null>(null);
+  const [selectedCuisines, setSelectedCuisines] = useState<string[]>([]);
+  const [showCuisines, setShowCuisines] = useState(false);
+  const cuisinesRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (cuisinesRef.current && !cuisinesRef.current.contains(event.target as Node)) {
+        setShowCuisines(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const toggleCuisine = (cuisine: string) => {
+    setSelectedCuisines(prev => 
+      prev.includes(cuisine) ? prev.filter(c => c !== cuisine) : [...prev, cuisine]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -102,22 +123,106 @@ export default function OnboardChefPage() {
               <div className="relative">
                 <select name="city" className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg text-[15px] text-gray-500 appearance-none focus:outline-none focus:border-gray-400">
                   <option value="">Select city</option>
-                  <option value="delhi">Delhi</option>
-                  <option value="mumbai">Mumbai</option>
+                  <option value="Delhi">Delhi</option>
+                  <option value="Noida">Noida</option>
+                  <option value="Ghaziabad">Ghaziabad</option>
+                  <option value="Faridabad">Faridabad</option>
+                  <option value="Gurugram">Gurugram</option>
+                  <option value="Mumbai">Mumbai</option>
+                  <option value="Bengaluru">Bengaluru</option>
+                  <option value="Chennai">Chennai</option>
+                  <option value="Kolkata">Kolkata</option>
+                  <option value="Hyderabad">Hyderabad</option>
+                  <option value="Pune">Pune</option>
+                  <option value="Jaipur">Jaipur</option>
+                  <option value="Lucknow">Lucknow</option>
+                  <option value="Chandigarh">Chandigarh</option>
+                  <option value="Indore">Indore</option>
+                  <option value="Kochi">Kochi</option>
+                  <option value="Ahmedabad">Ahmedabad</option>
+                  <option value="Bhubaneswar">Bhubaneswar</option>
+                  <option value="Nagpur">Nagpur</option>
+                  <option value="Dehradun">Dehradun</option>
+                  <option value="Shimla">Shimla</option>
+                  <option value="Jalandhar">Jalandhar</option>
+                  <option value="Mysuru">Mysuru</option>
+                  <option value="Udaipur">Udaipur</option>
+                  <option value="Varanasi">Varanasi</option>
+                  <option value="Rajkot">Rajkot</option>
+                  <option value="Haridwar">Haridwar</option>
+                  <option value="Rishikesh">Rishikesh</option>
+                  <option value="Mussoorie">Mussoorie</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
               <div className="relative">
                 <select name="zone" className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg text-[15px] text-gray-500 appearance-none focus:outline-none focus:border-gray-400">
                   <option value="">Select zone</option>
-                  <option value="zone1">Zone 1</option>
-                  <option value="zone2">Zone 2</option>
+                  <option value="north">North zone</option>
+                  <option value="south">South zone</option>
+                  <option value="east">East zone</option>
+                  <option value="west">West zone</option>
+                </select>
+                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+
+              {/* Row 5 */}
+              <div className="relative">
+                <select name="serviceType" className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg text-[15px] text-gray-500 appearance-none focus:outline-none focus:border-gray-400">
+                  <option value="">Job Preference</option>
+                  <option value="Part-Time">Part-Time</option>
+                  <option value="Full-Time">Full-Time</option>
                 </select>
                 <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               </div>
             </div>
 
-            {/* Row 5 - Full Width */}
+            {/* Cuisines - Full Width */}
+            <div className="mt-5 relative" ref={cuisinesRef}>
+              <div 
+                className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg min-h-[46px] flex flex-wrap items-center gap-2 cursor-pointer focus:outline-none focus:border-gray-400 pr-10"
+                onClick={() => setShowCuisines(!showCuisines)}
+              >
+                {selectedCuisines.length === 0 && <span className="text-[15px] text-gray-400">Select cuisines</span>}
+                {selectedCuisines.map((cuisine) => (
+                  <span key={cuisine} className="inline-flex items-center px-2 py-1 rounded bg-[#FFE4E6] text-[#E11D48] text-[13px] font-medium">
+                    {cuisine}
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); toggleCuisine(cuisine); }}
+                      className="ml-1 hover:text-[#BE123C] focus:outline-none"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </span>
+                ))}
+                <ChevronDown className={`w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-transform ${showCuisines ? 'rotate-180' : ''}`} />
+              </div>
+              
+              {/* Dropdown Options */}
+              <div className={`absolute z-10 w-full mt-1 bg-white border border-[#E5E7EB] rounded-lg shadow-lg max-h-60 overflow-y-auto ${showCuisines ? 'block' : 'hidden'}`}>
+                {CUISINES_LIST.map((cuisine) => (
+                  <label 
+                    key={cuisine} 
+                    className="px-4 py-2.5 text-[14px] cursor-pointer flex items-center space-x-3 hover:bg-gray-50 transition-colors m-0"
+                  >
+                    <input 
+                      type="checkbox" 
+                      name="cuisines" 
+                      value={cuisine} 
+                      checked={selectedCuisines.includes(cuisine)}
+                      onChange={() => toggleCuisine(cuisine)}
+                      className="rounded text-[#E11D48] focus:ring-[#E11D48] w-4 h-4" 
+                    />
+                    <span className={selectedCuisines.includes(cuisine) ? 'text-[#E11D48] font-medium' : 'text-gray-700'}>
+                      {cuisine}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Address - Full Width */}
             <div className="mt-5">
               <textarea
                 required
@@ -184,13 +289,12 @@ export default function OnboardChefPage() {
 
               {/* Row 3 */}
               <div className="relative">
-                <select name="bankName" className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg text-[15px] text-gray-500 appearance-none focus:outline-none focus:border-gray-400">
-                  <option value="">Bank Name</option>
-                  <option value="sbi">State Bank of India</option>
-                  <option value="hdfc">HDFC Bank</option>
-                  <option value="icici">ICICI Bank</option>
-                </select>
-                <ChevronDown className="w-4 h-4 text-gray-400 absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  required
+                  name="bankName"
+                  placeholder="Bank Name"
+                  className="w-full px-4 py-3 bg-white border border-[#E5E7EB] rounded-lg text-[15px] placeholder-gray-400 focus:outline-none focus:border-gray-400"
+                />
               </div>
             </div>
 

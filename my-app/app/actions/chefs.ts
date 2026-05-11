@@ -247,6 +247,8 @@ export async function onboardChef(formData: FormData) {
        zone: normalizeZone((formData.get("zone") as string) || ""),
        address: formData.get("address"),
        bio: formData.get("bio"),
+       cuisines: formData.getAll("cuisines"),
+       serviceType: formData.get("serviceType"),
        aadharNumber: formData.get("aadhar"),
        panNumber: formData.get("pan"),
        // Issue #11: use new nested bankDetails schema consistently

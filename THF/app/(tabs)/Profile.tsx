@@ -1,18 +1,21 @@
 import { signOut } from '@/lib/auth';
 import { clearUserCache, useUserStore } from '@/src/hooks/useUserStore';
-import { auth } from '@/src/services/firebaseConfig';
+import { auth, storage } from '@/src/services/firebaseConfig';
 import { clearSession } from '@/src/services/sessionStorage';
 import { getPartnerBookings } from '@/src/services/bookingService';
+import { updateUserProfile } from '@/src/services/userService';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View, RefreshControl } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Navbar from '../../components/Navbar';
 import { useLanguage } from '@/src/hooks/useLanguage';
 import { Fonts } from '@/src/theme/fonts';
 import Constants from 'expo-constants';
+import * as ImagePicker from 'expo-image-picker';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { CustomText as Text } from '../../components/CustomText';
 
 /* ── Types ── */
@@ -68,6 +71,7 @@ export default function ProfileScreen() {
   const { profile, loading, refresh } = useUserStore();
   const { t } = useLanguage();
   const [refreshing, setRefreshing] = React.useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [stats, setStats] = React.useState({ bookings: 0, earnings: 0 });
 
   const onRefresh = React.useCallback(async () => {
@@ -135,6 +139,52 @@ export default function ProfileScreen() {
     ]);
   };
 
+  const handlePickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'Sorry, we need camera roll permissions to make this work!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.5,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      uploadProfileImage(result.assets[0].uri);
+    }
+  };
+
+  const uploadProfileImage = async (uri: string) => {
+    if (!profile?.userId) return;
+    setUploadingImage(true);
+    try {
+      const response = await fetch(uri);
+      const blob = await response.blob();
+      
+      const fileRef = ref(storage, `kycdocuments/${profile.userId}_selfie_${Date.now()}`);
+      await uploadBytes(fileRef, blob);
+      const downloadURL = await getDownloadURL(fileRef);
+
+      // Update Firestore user document
+      const currentKycData = profile.kycDocuments || {};
+      const newKycData = { ...currentKycData, selfieUrl: downloadURL } as any;
+      await updateUserProfile(profile.userId, { kycDocuments: newKycData });
+
+      // Refresh store & caches
+      if (refresh) await refresh();
+      Alert.alert('Success', 'Profile photo updated successfully!');
+    } catch (error: any) {
+      console.error("Image upload failed:", error);
+      Alert.alert('Upload Failed', "Could not upload profile picture. Please try again.");
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const insets = useSafeAreaInsets();
 
   if (loading && !profile) {
@@ -159,19 +209,36 @@ export default function ProfileScreen() {
 
         {/* ── Profile Card ── */}
         <View style={styles.profileCard}>
-          <View style={styles.avatarWrapper}>
-            {profile?.kycDocuments?.selfieUrl ? (
-              <Image
-                source={{ uri: profile.kycDocuments.selfieUrl }}
-                style={styles.avatar}
-                contentFit="cover"
-              />
+          <TouchableOpacity 
+            style={styles.avatarWrapper} 
+            activeOpacity={0.8} 
+            onPress={handlePickImage}
+            disabled={uploadingImage}
+          >
+            {uploadingImage ? (
+              <View style={[styles.avatarPlaceholder, { backgroundColor: '#ddd' }]}>
+                <ActivityIndicator color="#E8304A" />
+              </View>
+            ) : profile?.kycDocuments?.selfieUrl ? (
+              <View>
+                <Image
+                  source={{ uri: profile.kycDocuments.selfieUrl }}
+                  style={styles.avatar}
+                  contentFit="cover"
+                />
+                <View style={styles.editImageBadge}>
+                  <Image source={require('@/assets/THF/edit.svg')} style={{ width: 12, height: 12, tintColor: '#fff' }} />
+                </View>
+              </View>
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarInitial}>{chefName ? chefName.charAt(0).toUpperCase() : '?'}</Text>
+                <View style={styles.editImageBadge}>
+                  <Image source={require('@/assets/THF/edit.svg')} style={{ width: 12, height: 12, tintColor: '#fff' }} />
+                </View>
               </View>
             )}
-          </View>
+          </TouchableOpacity>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{chefName || 'Partner'}</Text>
           </View>
@@ -189,40 +256,17 @@ export default function ProfileScreen() {
         </View>
 
 
-        {/* ── Stats Section ── */}
-        <View style={styles.threeStatsRow}>
-          <View style={styles.threeStatCard}>
-            <Text style={styles.threeStatValue}>{stats.bookings}</Text>
-            <Text style={styles.threeStatLabel}>{t('bookings')}</Text>
-          </View>
-          <View style={styles.threeStatCard}>
-            <Text style={styles.threeStatValue}>
-              {stats.earnings >= 1000 ? `₹${(stats.earnings / 1000).toFixed(1)}k` : `₹${stats.earnings}`}
-            </Text>
-            <Text style={styles.threeStatLabel}>{t('earnings')}</Text>
-          </View>
-          <View style={styles.threeStatCard}>
-            <Text style={styles.threeStatValue}>{profile?.experience?.length || 0}</Text>
-            <Text style={styles.threeStatLabel}>{t('expTags')}</Text>
-          </View>
-        </View>
+    
 
         {/* ── Menu Items ── */}
         <View style={styles.menuSection}>
           <MenuRow label={t('accountDetail') || 'Account detail'} onPress={() => router.push('/edit/EditDetails')} />
-          <View style={styles.menuDivider} />
           <MenuRow label={t('jobPreference') || 'Job preference'} onPress={() => router.push({ pathname: '/kyc/JobPreference', params: { isEditMode: 'true' } })} />
-          <View style={styles.menuDivider} />
           <MenuRow label={t('workExperience') || 'Work experience'} onPress={() => router.push({ pathname: '/kyc/Experience', params: { isEditMode: 'true' } })} />
-          <View style={styles.menuDivider} />
           <MenuRow label={t('cuisineType') || 'Cuisine type'} onPress={() => router.push({ pathname: '/kyc/Cuisines', params: { isEditMode: 'true' } })} />
-          <View style={styles.menuDivider} />
           <MenuRow label={t('bankDetails') || 'Bank details'} onPress={() => router.push('/edit/AccountDetails')} />
-          <View style={styles.menuDivider} />
           <MenuRow label={t('referFriend') || 'Refer a friend & Earn'} badge="Earn upto ₹5000" onPress={() => router.push('/edit/ReferFriend')} />
-          <View style={styles.menuDivider} />
           <MenuRow label={t('changeLanguage') || 'Change Language'} onPress={() => router.push('/edit/ChangeLanguage')} />
-          <View style={styles.menuDivider} />
           <MenuRow label={t('logout') || 'Log out'} onPress={handleLogout} />
         </View>
 
@@ -240,7 +284,7 @@ export default function ProfileScreen() {
 
 /* ── Styles ── */
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f5f5f7' },
+  container: { flex: 1, backgroundColor: '#ffffff' },
   scroll: { flex: 1 },
   scrollContent: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
   pageTitle: { fontSize: 22, fontWeight: '700', color: '#111', marginBottom: 16 },
@@ -254,7 +298,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#d3dbe2'
+    borderColor: '#d3dbe2',
+    shadowColor: '#000',
+    shadowOffset: { width: 3, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,  
+    elevation: 5,
+    
   },
   avatarWrapper: { marginBottom: 12 },
   avatar: { width: 80, height: 80, borderRadius: 40 },
@@ -267,6 +317,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   avatarInitial: { color: '#fff', fontSize: 32, fontWeight: '700' },
+  editImageBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#111',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 },
   name: { fontSize: 20, fontWeight: '700', color: '#111' },
   editBtn: { padding: 2 },
@@ -335,11 +398,7 @@ const styles = StyleSheet.create({
 
   /* Menu Section */
   menuSection: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: '#d3dbe2'
+    paddingVertical: 10,
   },
   menuDivider: { height: 1, backgroundColor: '#f5f5f5', marginHorizontal: 16 },
 
@@ -385,19 +444,24 @@ const menuStyles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
+    paddingVertical: 14,
     paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    marginBottom: 12,
   },
-  label: { fontSize: 15, color: '#222', fontWeight: '400' },
+  label: { fontSize: 15, color: '#374151', fontWeight: '400' },
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   badge: {
-    backgroundColor: '#FFF9E0',
-    borderRadius: 20,
-    paddingVertical: 3,
+    backgroundColor: '#ffedd5',
+    borderRadius: 12,
+    paddingVertical: 5,
     paddingHorizontal: 10,
   },
-  badgeText: { fontSize: 11, color: '#B8860B', fontWeight: '600' },
-  chevron: { fontSize: 20, color: '#222', fontWeight: '300' },
+  badgeText: { fontSize: 11, color: '#d97706', fontWeight: '600' },
+  chevron: { fontSize: 20, color: '#9ca3af', fontWeight: '300' },
 });
 
 
