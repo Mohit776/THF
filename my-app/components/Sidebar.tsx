@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/app/actions/auth";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -51,6 +52,17 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      <div className="p-6 border-t border-zinc-100 mt-auto">
+        <button
+          className="flex w-full items-center justify-start px-4 py-3 text-[14px] font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+          onClick={async () => {
+            await logout();
+          }}
+        >
+          <span>Logout</span>
+        </button>
+      </div>
     </aside>
   );
 }

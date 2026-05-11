@@ -19,7 +19,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {isChefsPage ? (
             <>
-              <div className="relative">
+              {/* <div className="relative">
                 <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
@@ -32,7 +32,7 @@ export default function Header() {
               </button>
               <button className="px-5 py-2 bg-[#E11D48] text-white text-[13px] font-medium rounded-md hover:bg-[#BE123C] transition-colors">
                 + Add Chef
-              </button>
+              </button> */}
             </>
           ) : isBookingsPage ? (
             <>
