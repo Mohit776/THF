@@ -45,13 +45,23 @@ function ensureInitialized() {
         storageBucket: "tfh-partner-app.firebasestorage.app",
       });
     } else {
-      // Local development: use the service account JSON file in the project root
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const serviceAccount = require("../tfh-partner-app-firebase-adminsdk-fbsvc-f78730d175.json");
-      admin.initializeApp({
-        credential: admin.credential.cert(serviceAccount),
-        storageBucket: "tfh-partner-app.firebasestorage.app",
-      });
+      try {
+        // Local development: use the service account JSON file in the project root.
+        // Using fs.readFileSync ensures Webpack doesn't try to bundle the file during Vercel builds.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const fs = require("fs");
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const path = require("path");
+        const serviceAccountPath = path.join(process.cwd(), "tfh-partner-app-firebase-adminsdk-fbsvc-f78730d175.json");
+        const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+        
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+          storageBucket: "tfh-partner-app.firebasestorage.app",
+        });
+      } catch (error) {
+        console.error("Firebase Admin initialization error: Service account not found or environment variables missing/invalid.");
+      }
     }
   }
 
