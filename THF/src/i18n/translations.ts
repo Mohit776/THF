@@ -57,6 +57,7 @@ const translations = {
   reUploadDocuments: { en: 'Re-upload Documents', hi: 'दस्तावेज़ पुनः अपलोड करें' },
   noBookingsToday: { en: 'No bookings for today', hi: 'आज की कोई बुकिंग नहीं है' },
   getDirection: { en: 'Get Direction', hi: 'दिशा प्राप्त करें' },
+  navigate: { en: 'Navigate', hi: 'नेविगेट करें' },
   mapPreview: { en: 'Map Preview', hi: 'मानचित्र पूर्वावलोकन' },
   nextUp: { en: 'Next up', hi: 'अगली बुकिंग' },
   upcoming: { en: 'Upcoming', hi: 'आगामी' },

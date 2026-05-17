@@ -259,7 +259,7 @@ export default function JobTimerScreen() {
         <Navbar />
         <JobCard job={JOB} t={t} />
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 50 }} />
 
         {/* Timer area */}
         <View style={styles.timerArea}>
@@ -331,6 +331,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#DCDCDC',
+
   },
   currentJobLabel: {
     fontSize: 11,
@@ -349,9 +350,9 @@ const styles = StyleSheet.create({
     letterSpacing: -0.5,
   },
   jobMeta: { gap: 4 },
-  jobRow: { flexDirection: 'row', alignItems: 'center' },
+  jobRow: { flexDirection: 'row', alignItems: 'flex-start' },
   jobRowLabel: { fontSize: 14, color: '#6c757d', fontWeight: '500' },
-  jobRowValue: { fontSize: 14, color: '#343a40', fontWeight: '700' },
+  jobRowValue: { flex: 1, fontSize: 14, color: '#343a40', fontWeight: '700', paddingLeft: 5 },
   timerArea: {
     alignItems: 'center',
     justifyContent: 'center',

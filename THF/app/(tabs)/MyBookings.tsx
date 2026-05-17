@@ -1,14 +1,14 @@
+import { useLanguage } from '@/src/hooks/useLanguage';
+import { getPartnerBookings, type Booking as FSBooking } from '@/src/services/bookingService';
+import { auth } from '@/src/services/firebaseConfig';
+import dayjs from 'dayjs';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet, StatusBar, ActivityIndicator, RefreshControl, Linking, Alert, Modal } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Modal, RefreshControl, ScrollView, StatusBar, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { CustomText as Text } from '../../components/CustomText';
 import Navbar from '../../components/Navbar';
 import OtpInputBoxes from '../../components/OtpInputBoxes';
-import { auth } from '@/src/services/firebaseConfig';
-import { getPartnerBookings, type Booking as FSBooking } from '@/src/services/bookingService';
-import dayjs from 'dayjs';
-import { useLanguage } from '@/src/hooks/useLanguage';
-import { CustomText as Text } from '../../components/CustomText';
 
 const HARDCODED_OTP = '123456';
 
@@ -245,7 +245,7 @@ export default function MyBookingsScreen() {
         <Text style={styles.dateLabel}>{dateLabel}</Text>
 
         {/* ── Next Up Card ── */}
-        {nextUp && (
+        {/* {nextUp && (
           <View style={styles.nextUpCard}>
             <Text style={styles.nextUpLabel}>{nextUp.label}</Text>
             <Text style={styles.nextUpTitle}>{nextUp.title}</Text>
@@ -277,8 +277,22 @@ export default function MyBookingsScreen() {
                   style={[styles.actionBtn, { flex: 1, backgroundColor: '#4591E8' }]}
                   activeOpacity={0.8}
                   onPress={() => {
-                    const addr = encodeURIComponent(nextUp.address || nextUp.locationNote);
-                    Linking.openURL(`https://www.google.com/maps/search/?api=1&query=${addr}`);
+                    const addr = nextUp.address
+                      ? `${nextUp.address}, ${nextUp.locationNote}`
+                      : nextUp.locationNote;
+                    router.push({
+                      pathname: '/edit/MapScreen',
+                      params: {
+                        address: addr,
+                        bookingId: nextUp.id ?? '',
+                        title: nextUp.title ?? '',
+                        time: nextUp.time ?? '',
+                        location: addr,
+                        guests: String(nextUp.guests ?? 0),
+                        cuisine: nextUp.cuisine ?? '',
+                        occasion: nextUp.occasion ?? '',
+                      },
+                    });
                   }}
                 >
                   <Text style={styles.actionBtnText} adjustsFontSizeToFit numberOfLines={1}>
@@ -301,7 +315,7 @@ export default function MyBookingsScreen() {
               </View>
             </View>
           </View>
-        )}
+        )} */}
 
         {/* ── Filter Tabs ── */}
         <View style={styles.filterRow}>

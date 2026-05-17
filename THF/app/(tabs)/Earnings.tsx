@@ -74,13 +74,13 @@ export default function EarningsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState<'Daily' | 'Weekly' | 'Monthly'>('Monthly');
-  
+
   // Date selection states
   const [selectedDate, setSelectedDate] = useState(dayjs());
   const [isMonthPickerVisible, setMonthPickerVisible] = useState(false);
-  
+
   const { t } = useLanguage();
-  
+
   const availableMonths = Array.from({ length: 12 }).map((_, i) => dayjs().subtract(i, 'month'));
 
   const fetchTransactions = React.useCallback(async () => {
@@ -99,7 +99,7 @@ export default function EarningsScreen() {
   useEffect(() => {
     let monthSum = 0;
     const displayTx: DisplayTransaction[] = [];
-    
+
     // Month range for the summary card
     const monthStart = selectedDate.startOf('month');
     const monthEnd = selectedDate.endOf('month');
@@ -111,16 +111,16 @@ export default function EarningsScreen() {
 
     allBookings.forEach(booking => {
       const bookingDate = dayjs((booking.date as any)?.toDate?.() ?? booking.date);
-      
+
       // Update monthly total (for summary card)
-      if ((bookingDate.isAfter(monthStart) || bookingDate.isSame(monthStart)) && 
-          (bookingDate.isBefore(monthEnd) || bookingDate.isSame(monthEnd))) {
+      if ((bookingDate.isAfter(monthStart) || bookingDate.isSame(monthStart)) &&
+        (bookingDate.isBefore(monthEnd) || bookingDate.isSame(monthEnd))) {
         monthSum += (booking.amount || 0);
       }
 
       // Update transactions list (based on tab)
-      if ((bookingDate.isAfter(tabStart) || bookingDate.isSame(tabStart)) && 
-          (bookingDate.isBefore(tabEnd) || bookingDate.isSame(tabEnd))) {
+      if ((bookingDate.isAfter(tabStart) || bookingDate.isSame(tabStart)) &&
+        (bookingDate.isBefore(tabEnd) || bookingDate.isSame(tabEnd))) {
         displayTx.push({
           id: booking.bookingId || Math.random().toString(),
           eventName: booking.eventName || `Booking - ${booking.clientName}`,
@@ -182,15 +182,15 @@ export default function EarningsScreen() {
         {/* Tabs */}
         <View style={styles.tabsContainer}>
           {['Daily', 'Weekly', 'Monthly'].map((tab) => (
-             <Pressable
-               key={tab}
-               style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
-               onPress={() => setActiveTab(tab as 'Daily' | 'Weekly' | 'Monthly')}
-             >
-               <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                 {tab}
-               </Text>
-             </Pressable>
+            <Pressable
+              key={tab}
+              style={[styles.tabButton, activeTab === tab && styles.tabButtonActive]}
+              onPress={() => setActiveTab(tab as 'Daily' | 'Weekly' | 'Monthly')}
+            >
+              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                {tab}
+              </Text>
+            </Pressable>
           ))}
         </View>
 
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
 
   /* Transactions list container */
   transactionsList: {
-    gap: 12, 
+    gap: 12,
   },
 
   /* Empty state */

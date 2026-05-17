@@ -15,7 +15,7 @@ import { useLanguage } from '@/src/hooks/useLanguage';
 import { Fonts } from '@/src/theme/fonts';
 import Constants from 'expo-constants';
 import * as ImagePicker from 'expo-image-picker';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { uploadKycImage } from '@/src/services/kycStorageService';
 import { CustomText as Text } from '../../components/CustomText';
 
 /* ── Types ── */
@@ -68,7 +68,7 @@ function MenuRow({
 /* ── Main Screen ── */
 export default function ProfileScreen() {
   const router = useRouter();
-  const { profile, loading, refresh } = useUserStore();
+  const { profile, loading, refresh, updateProfile } = useUserStore();
   const { t } = useLanguage();
   const [refreshing, setRefreshing] = React.useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -148,7 +148,7 @@ export default function ProfileScreen() {
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      allowsEditing: false,
       aspect: [1, 1],
       quality: 0.5,
     });
@@ -162,20 +162,15 @@ export default function ProfileScreen() {
     if (!profile?.userId) return;
     setUploadingImage(true);
     try {
-      const response = await fetch(uri);
-      const blob = await response.blob();
-      
-      const fileRef = ref(storage, `kycdocuments/${profile.userId}_selfie_${Date.now()}`);
-      await uploadBytes(fileRef, blob);
-      const downloadURL = await getDownloadURL(fileRef);
+      // Use the dedicated KYC storage service which uses native SDK and correct paths
+      const downloadURL = await uploadKycImage(uri, 'selfie');
 
-      // Update Firestore user document
+      // Update store (this handles Firestore + local cache)
       const currentKycData = profile.kycDocuments || {};
-      const newKycData = { ...currentKycData, selfieUrl: downloadURL } as any;
-      await updateUserProfile(profile.userId, { kycDocuments: newKycData });
+      const newKycData = { ...currentKycData, selfieUrl: downloadURL };
 
-      // Refresh store & caches
-      if (refresh) await refresh();
+      await updateProfile({ kycDocuments: newKycData as any });
+
       Alert.alert('Success', 'Profile photo updated successfully!');
     } catch (error: any) {
       console.error("Image upload failed:", error);
@@ -209,9 +204,9 @@ export default function ProfileScreen() {
 
         {/* ── Profile Card ── */}
         <View style={styles.profileCard}>
-          <TouchableOpacity 
-            style={styles.avatarWrapper} 
-            activeOpacity={0.8} 
+          <TouchableOpacity
+            style={styles.avatarWrapper}
+            activeOpacity={0.8}
             onPress={handlePickImage}
             disabled={uploadingImage}
           >
@@ -256,7 +251,7 @@ export default function ProfileScreen() {
         </View>
 
 
-    
+
 
         {/* ── Menu Items ── */}
         <View style={styles.menuSection}>
@@ -302,9 +297,9 @@ const styles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 3, height: 5 },
     shadowOpacity: 0.3,
-    shadowRadius: 6,  
+    shadowRadius: 6,
     elevation: 5,
-    
+
   },
   avatarWrapper: { marginBottom: 12 },
   avatar: { width: 80, height: 80, borderRadius: 40 },

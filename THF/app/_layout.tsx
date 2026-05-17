@@ -113,6 +113,7 @@ export default function RootLayout() {
         <Stack.Screen name="edit/ChangeLanguage" />
         <Stack.Screen name="edit/ReferFriend" />
         <Stack.Screen name="edit/JobTimer" />
+        <Stack.Screen name="edit/MapScreen" />
         {/* Main tabs */}
         <Stack.Screen name="(tabs)" />
       </Stack>

@@ -125,7 +125,7 @@ function BookingCard({
               <Text style={bookingStyles.viewBtnText}>{t('viewDetail')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={bookingStyles.locationBtn} onPress={onLocation} activeOpacity={0.8}>
-              <Text style={bookingStyles.locationBtnText}>{t('location')}</Text>
+              <Text style={bookingStyles.locationBtnText}>{t('navigate')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={bookingStyles.callBtn} onPress={onCallClient} activeOpacity={0.8}>
               <Ionicons name="call-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
@@ -506,7 +506,19 @@ export default function DashboardScreen() {
               onLocation={() => {
                 const targetAddress = booking.address ? `${booking.address}, ${booking.location}` : booking.location;
                 if (targetAddress) {
-                  Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(targetAddress)}`);
+                  router.push({
+                    pathname: '/edit/MapScreen',
+                    params: {
+                      address: targetAddress,
+                      bookingId: booking.bookingId ?? '',
+                      title: booking.clientName ?? '',
+                      time: dayjs((booking.date as any).toDate?.() ?? booking.date).format('hh:mm A'),
+                      location: targetAddress,
+                      guests: String(booking.guests ?? 0),
+                      cuisine: booking.cuisine ?? '',
+                      occasion: booking.eventType ?? '',
+                    },
+                  });
                 }
               }}
             />
@@ -555,7 +567,7 @@ export default function DashboardScreen() {
               <Text style={modalStyles.detailValue}>{selectedBooking?.cuisine || 'Not specified'}</Text>
             </View>
 
-          
+
 
             <View style={modalStyles.actionRow}>
               <TouchableOpacity
@@ -564,11 +576,24 @@ export default function DashboardScreen() {
                 onPress={() => {
                   const targetAddress = selectedBooking?.address ? `${selectedBooking.address}, ${selectedBooking.location}` : selectedBooking?.location;
                   if (targetAddress) {
-                    Linking.openURL(`https://maps.google.com/?q=${encodeURIComponent(targetAddress)}`);
+                    setSelectedBooking(null);
+                    router.push({
+                      pathname: '/edit/MapScreen',
+                      params: {
+                        address: targetAddress,
+                        bookingId: selectedBooking?.id ?? '',
+                        title: selectedBooking?.clientName ?? '',
+                        time: `${selectedBooking?.time} ${selectedBooking?.period}`,
+                        location: targetAddress,
+                        guests: String(selectedBooking?.guests ?? 0),
+                        cuisine: selectedBooking?.cuisine ?? '',
+                        occasion: selectedBooking?.occasion ?? '',
+                      },
+                    });
                   }
                 }}
               >
-                <Text style={modalStyles.actionButtonText}>{t('getDirection')}</Text>
+                <Text style={modalStyles.actionButtonText}>{t('navigate')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -900,5 +925,4 @@ const bookingStyles = StyleSheet.create({
   },
   callBtnText: { fontSize: 13, color: '#fff', fontWeight: '600' },
 });
-
 

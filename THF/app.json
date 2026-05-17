@@ -2,17 +2,22 @@
   "expo": {
     "name": "TFH Partner",
     "slug": "thefamoushalwaipartners",
-    "version": "1.5",
+    "version": "1.8",
     "orientation": "portrait",
     "icon": "./assets/app_assets/icon.png",
     "splash": {
-      "image": "./assets/app_assets/TFH-partner.png",
+      "image": "./assets/app_assets/Group1171283339-2.png",
       "resizeMode": "cover",
       "backgroundColor": "#EA243F"
     },
     "scheme": "thf",
     "userInterfaceStyle": "automatic",
     "android": {
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCctEGlkUkIMBepdzLf60eqtrgxxt_E3JE"
+        }
+      },
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#ffffff",
@@ -20,9 +25,11 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.thfpartnerv1.next.myapp",
-      "versionCode": 6,
+      "versionCode": 9,
       "permissions": [
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -48,6 +55,12 @@
           "icon": "assets/app_assets/Maskgroup.png",
           "color": "#ffffff",
           "sounds": []
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow TFH Partner to use your location services to show booking addresses on the map."
         }
       ],
       "@react-native-firebase/app",
